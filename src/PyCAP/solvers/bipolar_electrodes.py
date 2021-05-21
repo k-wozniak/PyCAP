@@ -15,7 +15,6 @@ def two_cap(c1, c2, q1, q2, q3, q4):
 
     return quadratic_solver(C)
 
-
 def mean_two_cap(signals, qs):
     """ Extension of the two cap method where each possible solution to every 
         signal pair is found and the average solution is obtained. More robust
@@ -42,7 +41,6 @@ def mean_two_cap(signals, qs):
     w_mean = w_mean/w_mean.sum(axis=0,keepdims=1)
     
     return w_mean
-
 
 def NCap(signals, qs, initial_values = None, solver_algorithm = quadratic_solver):
     """ Further extension of the two cup method where the C matrix is generated
@@ -73,3 +71,61 @@ def NCap(signals, qs, initial_values = None, solver_algorithm = quadratic_solver
 
     return solver_algorithm(C, initial_values)
 
+def VSR(d, fs, du, vmin, vstep, vmax):
+    """ VSR Delay-and-add recordings - B.W.Metcalfe 2018
+            This operates in the time domain and needs to know the electrode
+            spacing, the sample rate, and the desired analysis parameters.
+            d - Time domain data to beamform
+            fs - Sample rate of the data in Hz
+            du - The nominal electrode spacing in meters
+            vmin - Starting velocity
+            vstep - Velocity step
+            vmax - Stopping velocity
+    """
+    d = np.array(d)
+
+    # Number of velocities
+    v = np.arange(vmin, vmax, vstep)
+    nv = len(v)
+
+    # Get the length of the recordings and the number of channels
+    nt, nu = d.shape
+        
+    # Temporal sampling parameters
+    t = np.arange(0, nt-1, 1/fs)
+        
+    # Frequency axis
+    f = (np.arange(-nt/2, nt/2 - 1) / nt) * fs
+    
+    # Generate element positions
+    u = np.arange(0, nu-1) * du
+
+    urep = np.tile(u, [nt, 1])
+        
+    # Beam-forming in the slowness domain
+    vwin = np.ones(len(v))
+    vwin[abs(v) > vmax] = 0
+    vwin[abs(v) < vmin] = 0
+        
+    dft = np.fft(d)
+    s = 1.0/v # Hmmm
+
+    im = np.zeros((10, nv)) #TODO
+
+    for n in range(0, nv):
+        delays = urep * s(n)
+
+        # Delay
+        #imn = ifft(ifftshift( fftshift(dft,1) .* exp(-j*2*pi*repmat(f.',1,nu).*delays), 1 ))
+
+        everything = np.fft.fftshift(dft, 1) * np.exp(-1j * 2 * np.pi * np.tile(f.T, 1, nu) * delays)
+
+        a = np.fft.ifftshift(everything, 1)
+
+        imn = np.fft.ifft(a)
+
+        # Sum
+        im[:, n] = np.sum(imn.T) # TODO 
+    
+    im = abs(im)
+    v = im

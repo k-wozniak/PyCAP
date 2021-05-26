@@ -71,6 +71,36 @@ def NCap(signals, qs, initial_values = None, solver_algorithm = quadratic_solver
 
     return solver_algorithm(C, initial_values)
 
+def NCapPairs(signals, qs, initial_values = None, solver_algorithm = quadratic_solver):
+    """ Further extension of the two cup method where the C matrix is generated
+        based on every avaliable signal. It is also less computation intensive
+        than the mean_two_cap. Recommended method to use."""
+    qs_length = qs[0].shape[0]
+    num_signals = len(signals)
+
+    conv_signals = extend_signals_toeplitz(signals, qs_length)
+    
+    C = np.zeros((conv_signals[0].shape[0], qs[0].shape[1]))
+    for i in range(0, num_signals-1, 2):
+        c1 = conv_signals[i]
+        q1 = qs[i]
+        q2 = qs[i+1]
+
+        j = i+1
+        
+        c2 = conv_signals[j]
+        q3 = qs[j]
+        q4 = qs[j+1]
+        
+        C1Q4 = np.matmul(c1, q4)
+        C1Q3 = np.matmul(c1, q3)
+        C2Q2 = np.matmul(c2, q2)
+        C2Q1 = np.matmul(c2, q1)
+
+        C = (C + C1Q4 - C1Q3 - C2Q2 + C2Q1)
+
+    return solver_algorithm(C, initial_values)
+
 def VSR(d, fs, du, vmin, vstep, vmax):
     """ VSR Delay-and-add recordings - B.W.Metcalfe 2018
             This operates in the time domain and needs to know the electrode

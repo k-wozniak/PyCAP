@@ -1,24 +1,28 @@
 from PyCAP.solvers import bipolar_electrodes as be
 from PyCAP.solvers.utils.qs_generation import generate_q
+from PyCAP.solvers.utils.signal_operations import moving_average
 
 import numpy as np
 from scipy.io import loadmat, savemat
 import matplotlib.pyplot as plt
 
-#caps = loadmat("meanCAP.mat")['d']
+caps = loadmat("meanCAP2.mat")['d']
+#caps = loadmat("CAP.mat")['d']
 
-caps = loadmat("caps.mat")['caps']
-
-signal_length, num_electrodes, samples = caps.shape
+samples = 1
+signal_length, num_electrodes = caps.shape
+#signal_length, num_electrodes, samples = caps.shape
 
 caps = np.array(caps).T
+caps = np.fliplr(caps)
+
 fs = 100e3 # Hz
 
 du = 3.5e-3
 distance_first_electrode = 80e-3
 
-for resolution in [0.25]:
-    search_range = np.arange(10, 80, resolution)
+for resolution in [1]:
+    search_range = np.arange(20, 120, resolution)
 
     qs = []
     for n in range(num_electrodes + 1):
@@ -31,9 +35,9 @@ for resolution in [0.25]:
     ws_quad = []
 
     for s in range(samples): # samples):
-        signals = (caps[s, :, :])
-        #signals = caps
-        w = be.NCap(signals, qs)
+        #signals = (caps[s, :, :])
+        signals = caps
+        w = be.NCapPairs(signals, qs)
 
         w_lin = w.copy()
         w_quad = w.copy()
@@ -50,9 +54,20 @@ for resolution in [0.25]:
 
     #plt.plot(np.mean(ws, axis=0))
     #plt.plot(np.mean(ws_lin, axis=0))
-    plt.plot(search_range, ws_quad[5])
+    #plt.plot(search_range, ws_quad)
+    #search_range = np.arange(10, 80, 0.25)
+    #search_range = search_range[1:-1]
+    plt.bar(search_range, ws_quad[0])
     plt.show()
 
-    file_name = "we_will_see" + str(resolution) + ".mat"
+    plt.bar(search_range, ws_quad[0])
+    plt.bar(search_range, moving_average(ws_quad[0], 3))
+    plt.show()
+
+    #plt.plot(search_range, ws[0])
+    plt.bar(search_range, moving_average(ws[0], 3))
+    plt.show()
+
+    file_name = "w_distribiutions" + str(resolution) + ".mat"
     savemat(file_name, {"ws": ws, "ws_lin": ws_lin, "w_quad": ws_quad})
 

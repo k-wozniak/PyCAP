@@ -54,9 +54,7 @@ class Model():
                 distance = probe.get_position() - source.get_position()
                 dt = int(round((distance/velocity)*self.params.fs))
                 
-                # Add signal in the degree of present cv fibre
-                for _ in range(0, fibre_count):
-                    signal = signal + source.get_sfap(velocity, dt)
+                signal = signal + (source.get_sfap(velocity, dt) * fibre_count)
         
         return signal
 

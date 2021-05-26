@@ -21,8 +21,8 @@ fs = 100e3 # Hz
 du = 3.5e-3
 distance_first_electrode = 80e-3
 
-for resolution in [1]:
-    search_range = np.arange(20, 120, resolution)
+for resolution in [0.1]:
+    search_range = np.arange(10, 120, resolution)
 
     qs = []
     for n in range(num_electrodes + 1):
@@ -37,7 +37,7 @@ for resolution in [1]:
     for s in range(samples): # samples):
         #signals = (caps[s, :, :])
         signals = caps
-        w = be.NCapPairs(signals, qs)
+        w = be.NCap(signals, qs)
 
         w_lin = w.copy()
         w_quad = w.copy()
@@ -65,9 +65,9 @@ for resolution in [1]:
     plt.show()
 
     #plt.plot(search_range, ws[0])
-    plt.bar(search_range, moving_average(ws[0], 3))
-    plt.show()
+    #plt.bar(search_range, moving_average(ws[0], 3))
+    #plt.show()
 
-    file_name = "w_distribiutions" + str(resolution) + ".mat"
+    file_name = "w_distribution" + str(resolution) + ".mat"
     savemat(file_name, {"ws": ws, "ws_lin": ws_lin, "w_quad": ws_quad})
 

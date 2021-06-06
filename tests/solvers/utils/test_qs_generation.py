@@ -20,7 +20,7 @@ class TestQsGeneration(unittest.TestCase):
         fs = const
         velocities = np.arange(1, 3, 1)
 
-        q = gen.generate_q_matrix(probe, velocities, fs)
+        q = gen.generate_q_from_probe(probe, velocities, fs)
 
         self.assertEqual((200, 2), q.shape)
         self.assertEqual(1, q[100, 0])
@@ -32,7 +32,7 @@ class TestQsGeneration(unittest.TestCase):
 
         velocities = np.arange(1, 3, 1)
 
-        self.assertRaises(ValueError, gen.generate_q_matrix, probe, velocities, 10)
+        self.assertRaises(ValueError, gen.generate_q_from_probe, probe, velocities, 10)
 
     def test_simple_input_correct_output_for_multiple_probes(self):
         probes_num = 3
@@ -45,7 +45,7 @@ class TestQsGeneration(unittest.TestCase):
             probe = MockProbe(const)
             probes.append(probe)
 
-        qs = gen.generate_qs(probes, velocities, fs)
+        qs = gen.generate_qs_from_probes(probes, velocities, fs)
 
         for i in range(probes_num):
             q = qs[i]

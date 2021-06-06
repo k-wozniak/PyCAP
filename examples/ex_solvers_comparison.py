@@ -5,7 +5,7 @@ from PyCAP.solvers import bipolar_electrodes as be
 from PyCAP.model.model_params import ModelParams
 from PyCAP.model.model import Model
 from PyCAP.solvers.utils import quadratic_solvers as qsolvers
-from PyCAP.solvers.utils.qs_generation import generate_qs
+from PyCAP.solvers.utils.qs_generation import generate_qs_from_probes
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -61,7 +61,7 @@ for cvdis in [cv_dis1, cv_dis2, cv_dis3]:
     signals = bipolar.get_all_recordings()
 
     cv_dis_w = np.arange(10, 100, 1)
-    qs = generate_qs(probes, cv_dis_w, params.fs)
+    qs = generate_qs_from_probes(probes, cv_dis_w, params.fs)
     
     start = time.time()
     w_quad = be.NCap(signals, qs, None, qsolvers.quadratic_solver)

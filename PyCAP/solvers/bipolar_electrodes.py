@@ -158,4 +158,9 @@ def VSR(d, fs, du, vmin, vstep, vmax):
         im[:, n] = np.sum(imn.T) # TODO 
     
     im = abs(im)
-    v = im
+    
+    #ndarray.max(axis=None, out=None, keepdims=False, initial=<no value>, where=True)
+    
+    im = im.max(1)
+
+    return im

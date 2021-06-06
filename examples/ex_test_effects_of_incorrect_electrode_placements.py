@@ -1,13 +1,11 @@
 from PyCAP.recordingProbes.simple_recording_probe import SimpleRecordingProbe
-from PyCAP.excitationSources.accurate_excitation_source import AccurateExcitationSource
-from PyCAP.interferenceSources.gaussian_white_noise import GaussianWhiteNoise
 from PyCAP.compoundElectrodes.overlapping_multipolar_electrodes import OverlappingMultipolarElectrodes
 from PyCAP.excitationSources.simple_excitation_source import SimpleExcitationSource
 from PyCAP.model.model_params import ModelParams
 from PyCAP.model.model import Model
 
 from PyCAP.solvers import bipolar_electrodes as be
-from PyCAP.solvers.utils.qs_generation import generate_qs
+from PyCAP.solvers.utils.qs_generation import generate_qs_from_probes
 
 import numpy as np
 from scipy.io import savemat
@@ -92,18 +90,25 @@ plt.show()
 # Solve just in case
 search_range = np.arange(10, 120, 1)
 
-qs = generate_qs(probes, search_range, params.fs)           
+qs = generate_qs_from_probes(probes, search_range, params.fs)           
 w = be.NCap(bipolar_signals, qs)
+
+w2 = be.VSR(singular_signals, params.fs, probes_center_to_center_distance, 10, 1, 100)
 
 w_quad = w.copy()
 for i in range(len(w)):
     v = search_range[i]
     w_quad[i] = w[i] / (v**2)
 
-plt.plot(w)
+plt.bar(search_range, w)
 #plt.plot(w)
 plt.show()
 
+plt.bar(search_range, w2)
+#plt.plot(w)
+plt.show()
+
+'''
 savemat(file_name,
     {
         "cv_diss": cv_dis,
@@ -115,3 +120,4 @@ savemat(file_name,
         "singular_signals": singular_signals,
         "bipolar_signals": bipolar_signals,
     })
+'''

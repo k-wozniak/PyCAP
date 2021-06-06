@@ -12,7 +12,7 @@ class ModelParams():
     # CV distribution in m/s
     # Numpy matrix with first column cv, second number of fibres
     # Example [5m/s, 10m/s, 20m/s, 50m/s]
-    #         [ 100,    50,    40,     2]
+    #         [100,  50,    40,    2    ]
     cv_distribution: None
 
     # Simulation length (s)

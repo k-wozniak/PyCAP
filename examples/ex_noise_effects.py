@@ -7,7 +7,7 @@ from PyCAP.excitationSources.simple_excitation_source import SimpleExcitationSou
 from PyCAP.model.model_params import ModelParams
 from PyCAP.model.model import Model
 from PyCAP.solvers import bipolar_electrodes as be
-from PyCAP.solvers.utils.qs_generation import generate_qs
+from PyCAP.solvers.utils.qs_generation import generate_qs_from_probes
 
 import numpy as np
 from scipy.io import savemat
@@ -65,7 +65,7 @@ for x in dbs:
     #plt.show()
 
     cv_dis_w = np.arange(10, 51, 1)
-    qs = generate_qs(probes, cv_dis_w, params.fs)
+    qs = generate_qs_from_probes(probes, cv_dis_w, params.fs)
     w = be.NCap(signals, qs)
     w = np.append(w, x)
 

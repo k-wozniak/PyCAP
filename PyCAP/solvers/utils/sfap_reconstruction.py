@@ -96,8 +96,7 @@ def recreate_A_matrix(A: np.ndarray):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
         shifted_A = np.nanmean(shifted_A, axis=1)
-        plt.plot(shifted_A)
-        plt.show()
+        
     shifted_A = np.nan_to_num(shifted_A, copy=False, nan=0.0)
 
     # Recreate A matrix

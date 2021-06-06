@@ -2,7 +2,7 @@ import PyCAP.solvers.utils.sfap_reconstruction as reconstruct
 from PyCAP.recordingProbes.simple_recording_probe import SimpleRecordingProbe
 from PyCAP.excitationSources.simple_excitation_source import SimpleExcitationSource
 from PyCAP.compoundElectrodes.overlapping_multipolar_electrodes import OverlappingMultipolarElectrodes
-from PyCAP.solvers.utils.qs_generation import generate_qs
+from PyCAP.solvers.utils.qs_generation import generate_qs_from_probes
 from PyCAP.model.model_params import ModelParams
 from PyCAP.model.model import Model
 
@@ -174,7 +174,7 @@ class TestSFAPReconstruction(unittest.TestCase):
         # Find w and Qs
         probabilities = (np.ones(cv_dis.shape[0]) * 1/cv_dis.shape[0]).T
 
-        qs = generate_qs(probes, cv_dis[:, 0], params.fs)
+        qs = generate_qs_from_probes(probes, cv_dis[:, 0], params.fs)
         bipolar_qs = []
         for i in range(len(qs)-1):
             bipolar_qs.append( qs[i+1] - qs[i] )

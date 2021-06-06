@@ -7,7 +7,7 @@ from PyCAP.model.model_params import ModelParams
 from PyCAP.model.model import Model
 
 from PyCAP.solvers import bipolar_electrodes as be
-from PyCAP.solvers.utils.qs_generation import generate_qs
+from PyCAP.solvers.utils.qs_generation import generate_qs_from_probes
 
 import numpy as np
 from scipy.io import savemat
@@ -91,7 +91,7 @@ plt.show()
 # Solve just in case
 search_range = np.arange(10, 120, 1)
 
-qs = generate_qs(probes, search_range, params.fs)           
+qs = generate_qs_from_probes(probes, search_range, params.fs)           
 w = be.NCap(bipolar_signals, qs)
 
 w_quad = w.copy()

@@ -48,7 +48,7 @@ class TestBipolarElectrodes(unittest.TestCase):
         cv_dis = np.c_[cv_dis, np.ones(cv_dis.shape[0])]
 
         signals, probes = self.generate_test_signal_for_input_distribution(cv_dis, 3)
-        qs = generate_qs(probes, cv_dis[:, 0], self.fs)
+        qs = generate_qs_from_probes(probes, cv_dis[:, 0], self.fs)
 
         w = two_cap(signals[0], signals[1], qs[0], qs[1], qs[1], qs[2])
 
@@ -59,7 +59,7 @@ class TestBipolarElectrodes(unittest.TestCase):
         cv_dis = np.c_[cv_dis, np.ones(cv_dis.shape[0])]
 
         signals, probes = self.generate_test_signal_for_input_distribution(cv_dis, 5)
-        qs = generate_qs(probes, cv_dis[:, 0], self.fs)
+        qs = generate_qs_from_probes(probes, cv_dis[:, 0], self.fs)
 
         w = mean_two_cap(signals, qs)
 
@@ -70,7 +70,7 @@ class TestBipolarElectrodes(unittest.TestCase):
         cv_dis = np.c_[cv_dis, np.ones(cv_dis.shape[0])]
 
         signals, probes = self.generate_test_signal_for_input_distribution(cv_dis, 5)
-        qs = generate_qs(probes, cv_dis[:, 0], self.fs)
+        qs = generate_qs_from_probes(probes, cv_dis[:, 0], self.fs)
 
         w = NCap(signals, qs)
 
@@ -82,7 +82,7 @@ class TestBipolarElectrodes(unittest.TestCase):
         cv_dis = np.c_[cv_range, cv_weights]
 
         signals, probes = self.generate_test_signal_for_input_distribution(cv_dis, 5)
-        qs = generate_qs(probes, cv_dis[:, 0], self.fs)
+        qs = generate_qs_from_probes(probes, cv_dis[:, 0], self.fs)
 
         w = NCap(signals, qs)
 

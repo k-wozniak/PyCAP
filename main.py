@@ -69,7 +69,7 @@ ws = []
 """ bottom
 for x in range(18, 30):
     cv_dis_w = np.arange(x, 60, 1)
-    qs = generate_qs(probes, cv_dis_w, params.fs)
+    qs = generate_qs_from_probes(probes, cv_dis_w, params.fs)
     w = be.NCap(signals, qs)
     w = np.pad(w, (x-18, 0), 'constant')
 
@@ -84,7 +84,7 @@ with xlsxwriter.Workbook('bottom_from_18_to_30_range_20-40.xlsx') as workbook:
 """ top
 for x in range(0, 11):
     cv_dis_w = np.arange(10, 40-x, 1)
-    qs = generate_qs(probes, cv_dis_w, params.fs)
+    qs = generate_qs_from_probes(probes, cv_dis_w, params.fs)
     w = be.NCap(signals, qs)
     w = np.pad(w, (0, x), 'constant')
 
@@ -101,7 +101,7 @@ with xlsxwriter.Workbook('top_from_40_to_30_range_20-40.xlsx') as workbook:
 
 for x in range(1, 6):
     cv_dis_w = np.arange(10, 50, x)
-    qs = generate_qs(probes, cv_dis_w, params.fs)
+    qs = generate_qs_from_probes(probes, cv_dis_w, params.fs)
     w = be.NCap(signals, qs)
 
     m = w.shape[0]
@@ -122,7 +122,7 @@ with xlsxwriter.Workbook('middle_from_1_to_6_range_20-40.xlsx') as workbook:
 """
 for x in [1, 0.5, 0.25]:
     cv_dis_w = np.arange(10, 50, x)
-    qs = generate_qs(probes, cv_dis_w, params.fs)
+    qs = generate_qs_from_probes(probes, cv_dis_w, params.fs)
     w = be.NCap(signals, qs)
 
     ws.append(w)
@@ -146,7 +146,7 @@ for x in [750, 2000, 3000, 4000, 7500]:
     start = time.time()
 
     cv_dis_w = np.arange(10, x, 1)
-    qs = generate_qs(probes, cv_dis_w, params.fs)
+    qs = generate_qs_from_probes(probes, cv_dis_w, params.fs)
     w = be.NCap(signals, qs)
     
     time_taken = time.time() - start
@@ -168,7 +168,7 @@ with xlsxwriter.Workbook('time_from_50_to_10000_run2.xlsx') as workbook:
 @profile(precision = 4)
 def test_NCap(signas, probes, fs):
     cv_dis_w = np.arange(10, 200, 1)
-    qs = generate_qs(probes, cv_dis_w, fs)
+    qs = generate_qs_from_probes(probes, cv_dis_w, fs)
     w = be.NCap(signals, qs)
     return w
 

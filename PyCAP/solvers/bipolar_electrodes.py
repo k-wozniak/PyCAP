@@ -101,7 +101,7 @@ def NCapPairs(signals, qs, initial_values = None, solver_algorithm = quadratic_s
 
     return solver_algorithm(C, initial_values)
 
-def VSR(d, fs, du, vmin, vstep, vmax):
+def VSR(d, fs, du, vmin, vstep, vmax) -> np.ndarray:
     """ VSR Delay-and-add recordings - B.W.Metcalfe 2018
             This operates in the time domain and needs to know the electrode
             spacing, the sample rate, and the desired analysis parameters.
@@ -113,6 +113,7 @@ def VSR(d, fs, du, vmin, vstep, vmax):
             vmax - Stopping velocity
     """
     d = np.array(d)
+    d = np.fliplr(d)
 
     # Number of velocities
     v = np.arange(vmin, vmax, vstep)
@@ -122,42 +123,39 @@ def VSR(d, fs, du, vmin, vstep, vmax):
     nt, nu = d.shape
         
     # Temporal sampling parameters
-    t = np.arange(0, nt-1, 1/fs)
+    t = np.arange(0, nt) / fs
         
     # Frequency axis
-    f = (np.arange(-nt/2, nt/2 - 1) / nt) * fs
+    f = (np.arange(-nt/2, nt/2) / nt) * fs
     
     # Generate element positions
-    u = np.arange(0, nu-1) * du
+    u = np.arange(0, nu) * du
 
     urep = np.tile(u, [nt, 1])
         
-    # Beam-forming in the slowness domain
-    vwin = np.ones(len(v))
-    vwin[abs(v) > vmax] = 0
-    vwin[abs(v) < vmin] = 0
-        
-    dft = np.fft(d)
+    dft = np.fft.fft(d.T).T
     s = 1.0/v # Hmmm
 
-    im = np.zeros((10, nv)) #TODO
-
+    im = []
     for n in range(0, nv):
-        delays = urep * s(n)
+        delays = urep * s[n]
 
         # Delay
         #imn = ifft(ifftshift( fftshift(dft,1) .* exp(-j*2*pi*repmat(f.',1,nu).*delays), 1 ))
+        a6 = np.tile(f.T, (nu, 1))
+        a5 = a6.T * delays
+        a4 = np.exp(-1j * 2 * np.pi * a5)
+        a3 = np.fft.fftshift(dft, 0)
+        a2 = a3 * a4
+        a1 = np.fft.ifftshift(a2, 0)
+        imn = np.fft.ifft(a1.T).T # Why does it work!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-        everything = np.fft.fftshift(dft, 1) * np.exp(-1j * 2 * np.pi * np.tile(f.T, 1, nu) * delays)
-
-        a = np.fft.ifftshift(everything, 1)
-
-        imn = np.fft.ifft(a)
+        sumation = np.sum(imn.T, axis=0)
 
         # Sum
-        im[:, n] = np.sum(imn.T) # TODO 
+        im.append(sumation)
     
-    im = abs(im)
+    im = abs(np.array(im))
     
     #ndarray.max(axis=None, out=None, keepdims=False, initial=<no value>, where=True)
     

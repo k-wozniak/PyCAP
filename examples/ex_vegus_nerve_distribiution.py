@@ -14,7 +14,7 @@ signal_length, num_electrodes = caps.shape
 #signal_length, num_electrodes, samples = caps.shape
 
 caps = np.array(caps).T
-caps = np.fliplr(caps)
+#caps = np.fliplr(caps)
 
 fs = 100e3 # Hz
 

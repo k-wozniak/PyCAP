@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.fft import fft, ifft, fftshift, ifftshift
 
 from PyCAP.solvers.utils.quadratic_solvers import quadratic_solver
 from PyCAP.solvers.utils.signal_operations import extend_signals_toeplitz, moving_average
@@ -133,7 +134,7 @@ def VSR(d, fs, du, vmin, vstep, vmax) -> np.ndarray:
 
     urep = np.tile(u, [nt, 1])
         
-    dft = np.fft.fft(d.T).T
+    dft = fft(d.T).T
     s = 1.0/v # Hmmm
 
     im = []
@@ -142,13 +143,11 @@ def VSR(d, fs, du, vmin, vstep, vmax) -> np.ndarray:
 
         # Delay
         #imn = ifft(ifftshift( fftshift(dft,1) .* exp(-j*2*pi*repmat(f.',1,nu).*delays), 1 ))
-        a6 = np.tile(f.T, (nu, 1))
-        a5 = a6.T * delays
-        a4 = np.exp(-1j * 2 * np.pi * a5)
-        a3 = np.fft.fftshift(dft, 0)
-        a2 = a3 * a4
-        a1 = np.fft.ifftshift(a2, 0)
-        imn = np.fft.ifft(a1.T).T # Why does it work!!!!!!!!!!!!!!!!!!!!!!!!!!
+        a6 = np.tile(f.T, (nu, 1)).T * delays
+        a4 = np.exp(-1j * 2 * np.pi * a6)
+        a3 = fftshift(dft, 0)
+        a1 = ifftshift(a3 * a4, 0)
+        imn = ifft(a1.T).T # Why does it work!!!
 
         sumation = np.sum(imn.T, axis=0)
 

@@ -37,9 +37,9 @@ for i in range(num_electrodes - 1):
     for j in range(i+1, num_electrodes):
         w = be.two_cap(caps[i], caps[j], qs[i], qs[i+1], qs[j], qs[j+1])
 
-        for k in range(len(w)):
-            v = search_range[i]
-            w[i] = w[i] / (v**2)
+        #for k in range(len(w)):
+        #    v = search_range[k]
+        #    w[k] = w[k] / (v**2)
 
         w = w[0:-end_offset]
 

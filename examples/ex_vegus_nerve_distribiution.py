@@ -6,7 +6,8 @@ import numpy as np
 from scipy.io import loadmat, savemat
 import matplotlib.pyplot as plt
 
-caps = loadmat("meanCAP2.mat")['d']
+#caps = loadmat("meanCAP2.mat")['d']
+caps = loadmat("meanCAP2scaled.mat")['out']
 #caps = loadmat("CAP.mat")['d']
 
 samples = 1
@@ -16,16 +17,14 @@ signal_length, num_electrodes = caps.shape
 caps = np.array(caps).T
 caps = np.flip(caps, 0)
 
-caps = np.delete(caps, (4), axis=0)
-
 fs = 100e3 # Hz
-
 du = 3.5e-3
 distance_first_electrode = 80e-3
 
-electrode_positions = (np.array([0, 1, 2, 3, 5, 6, 7, 8, 9]) * du) + distance_first_electrode
+#caps = np.delete(caps, (4), axis=0)
+electrode_positions = (np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]) * du) + distance_first_electrode
 
-for resolution in [0.01]:
+for resolution in [0.1]:
     search_range = np.arange(10, 120, resolution)
 
     qs = []
@@ -69,14 +68,16 @@ for resolution in [0.01]:
     #search_range = search_range[1:-1]
     #plt.plot(ws1)
     #plt.show()
+    ws_quad[0, -20:] = 0
+    ws_quad[0] = ws_quad[0] / sum(ws_quad[0])
 
     plt.bar(search_range, ws_quad[0])
     plt.bar(search_range, moving_average(ws_quad[0], 3))
     plt.show()
 
-    #plt.plot(search_range, ws[0])
-    #plt.bar(search_range, moving_average(ws[0], 3))
-    #plt.show()
+    plt.plot(search_range, ws[0])
+    plt.bar(search_range, moving_average(ws[0], 3))
+    plt.show()
 
     file_name = "w_distribution" + str(resolution) + ".mat"
     savemat(file_name, {"ws": ws, "ws_lin": ws_lin, "w_quad": ws_quad})

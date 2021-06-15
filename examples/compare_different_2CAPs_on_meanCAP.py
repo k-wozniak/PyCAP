@@ -7,19 +7,20 @@ from scipy.io import loadmat, savemat
 import matplotlib.pyplot as plt
 
 # Load data and setup basic info ----------------------------------------------
-caps = loadmat("meanCAP2.mat")['d']
+#caps = loadmat("meanCAP2scaled.mat")['out']
+caps = loadmat("meanCAP.mat")['d']
 
 samples = 1
 signal_length, num_electrodes = caps.shape
 
 caps = np.array(caps).T
-#caps = np.fliplr(caps) # Should they be flipped?
+caps = np.flip(caps, 0)
 
 # Set information about the signal and search range ---------------------------
 fs = 100e3 # Hz
 du = 3.5e-3
 distance_first_electrode = 80e-3
-search_range = np.arange(10, 120, 0.1)
+search_range = np.arange(10, 100, 0.1)
 
 # generate Qs -----------------------------------------------------------------
 qs = []
@@ -99,5 +100,23 @@ ax[2].plot(caps[SSDs[-1][2][0]])
 
 ax[3].set_title("Signal " + str(SSDs[-1][2][1]))
 ax[3].plot(caps[SSDs[-1][2][1]])
+
+plt.show()
+
+fig, ax = plt.subplots(2)
+
+w1 = ws[SSDs[1][2]]
+w2 = ws[SSDs[-1][2]]
+
+for k in range(len(w1)):
+    v = search_range[k]
+    w1[k] = w1[k] / (v**2)
+    w2[k] = w2[k] / (v**2)
+
+ax[0].set_title("Smallest SSD 2")
+ax[0].bar(search_range[0:-end_offset], w1)
+
+ax[1].set_title("Largest SSD 2")
+ax[1].bar(search_range[0:-end_offset], w2)
 
 plt.show()

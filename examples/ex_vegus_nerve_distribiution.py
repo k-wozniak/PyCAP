@@ -37,7 +37,7 @@ data = loadmat("eCAPs_with_classes")
 keys = np.array(data['keys'][0])
 caps = np.array(data['samples'])
 
-stimulation_levels = np.sort(np.unique(keys))[-5:]
+stimulation_levels = np.sort(np.unique(keys))
 
 num_electrodes, signal_length, _ = caps.shape
 
@@ -80,7 +80,7 @@ for stimulation_level in stimulation_levels:
         diss_mean_two_CAP.append(be.mean_two_cap(signals, qs))
         diss_NCAP.append(be.NCap(signals, qs))
         diff_NCAP_Pairs.append(be.NCapPairs(signals, qs))
-        diss_VSR.append(be.VSR(signals, fs, du, min_cv, target_resolution, max_cv+1))
+        diss_VSR.append(be.VSR(signals.T, fs, du, min_cv, target_resolution, max_cv+1))
     
 
     # Process multiple distributions into one
@@ -106,4 +106,4 @@ to_save = {
     "stimulations": [key for key, _ in items],
 }
 
-savemat("loads_of_data_to_sort.mat", to_save)
+savemat("loads_of_data_to_sort0-20.mat", to_save)

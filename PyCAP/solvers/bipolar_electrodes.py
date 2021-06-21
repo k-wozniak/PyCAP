@@ -1,9 +1,11 @@
 import numpy as np
 from numpy.fft import fft, ifft, fftshift, ifftshift
+from numba import jit
 
 from PyCAP.solvers.utils.quadratic_solvers import quadratic_solver
 from PyCAP.solvers.utils.signal_operations import extend_signals_toeplitz, moving_average
 
+@jit(nopython=True)
 def two_cap(c1, c2, q1, q2, q3, q4):
     """ A two cap implementation as stated in the paper. Uses only two electrodes
         which do not need to be next to each other. Consequently, 4 Qs"""
@@ -16,6 +18,7 @@ def two_cap(c1, c2, q1, q2, q3, q4):
 
     return quadratic_solver(C)
 
+@jit(nopython=True)
 def mean_two_cap(signals, qs):
     """ Extension of the two cap method where each possible solution to every 
         signal pair is found and the average solution is obtained. More robust
@@ -43,6 +46,7 @@ def mean_two_cap(signals, qs):
     
     return w_mean
 
+@jit(nopython=True)
 def NCap(signals, qs, initial_values = None, solver_algorithm = quadratic_solver):
     """ Further extension of the two cup method where the C matrix is generated
         based on every avaliable signal. It is also less computation intensive
@@ -72,6 +76,7 @@ def NCap(signals, qs, initial_values = None, solver_algorithm = quadratic_solver
 
     return solver_algorithm(C, initial_values)
 
+@jit(nopython=True)
 def NCapPairs(signals, qs, initial_values = None, solver_algorithm = quadratic_solver):
     """ Further extension of the two cup method where the C matrix is generated
         based on every avaliable signal. It is also less computation intensive

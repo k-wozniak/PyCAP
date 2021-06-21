@@ -5,6 +5,7 @@ from PyCAP.model.model_params import ModelParams
 
 from collections.abc import Sized, Iterable, Iterator
 import numpy as np
+from numba import jit
 
 class Model():
     """ Model class is responsible for simulation of the peripheral nervous
@@ -38,6 +39,7 @@ class Model():
             signal = self.add_interference(signal)
             probe.set_output_signal(signal)
 
+    @jit(nopython=True)
     def find_probe_signal(self, probe: RecordingProbe) -> np.ndarray:
         """ Shifts each of the signals and accumulates it based on the number
             of the fibres in the class

@@ -12,6 +12,7 @@ from PyCAP.solvers.utils.qs_generation import generate_qs_from_probes
 import numpy as np
 from scipy.io import savemat
 import matplotlib.pyplot as plt
+from scipy.stats import norm
 
 file_name = "simulation_step_A(v)_dddd.mat"
 
@@ -29,10 +30,19 @@ cv_dis = np.c_[cv_dis, np.ones(cv_dis.shape[0])] # A uniform distribution
 
 #cv_dis = np.c_[cv_dis, cv_dis_vals]
 
-# Set model parameters
-cv_dis = np.c_[np.array(30), np.array(1)]
+cv_min, cv_max, cv_step = (10, 80, 1)
+cv_dis = np.arange(cv_min, cv_max + cv_step, cv_step)
+cv_dis_vals = 100000*((2*norm.pdf(cv_dis,25,8)) + norm.pdf(cv_dis,50,6))
+cv_dis_vals = np.round(cv_dis_vals)
+plt.bar(cv_dis, cv_dis_vals)
+plt.show()
 
-params = ModelParams(cv_dis, 0.02)
+cv_dis = np.c_[cv_dis, cv_dis_vals]
+
+# Set model parameters
+cv_dis = np.c_[np.array(80), np.array(1)]
+
+params = ModelParams(cv_dis, 0.015)
 params.fs = 100e3 # Hz
 
 # Create model and add probes
@@ -40,7 +50,7 @@ model = Model(params)
 
 # Generate Probes
 excitation_source = SimpleExcitationSource(params.time_series)
-# excitation_source = AccurateExcitationSource(params.time_series) # For A(v) = v^2
+#excitation_source = AccurateExcitationSource(params.time_series) # For A(v) = v^2
 model.add_excitation_source(excitation_source)
 
 # Add noise
@@ -76,9 +86,19 @@ bipolar = OverlappingMultipolarElectrodes([-1, 1])
 bipolar.add_recording_probes(probes)
 bipolar_signals = bipolar.get_all_recordings()
 
-singular = OverlappingMultipolarElectrodes([1])
-singular.add_recording_probes(probes)
-singular_signals = singular.get_all_recordings()
+singular_signals = [s.output_signal for s in probes]
+
+fig, ax = plt.subplots(9)
+for i in range(9):
+    ax[i].plot(singular_signals[i])
+plt.show()
+
+#plt.plot(singular_signals[:, 0])
+#plt.show()
+
+plt.plot(bipolar_signals.T)
+plt.show()
+
 
 s = bipolar_signals[0].T
 wss = 10
@@ -89,7 +109,7 @@ plt.plot(b)
 plt.show()
 
 # Solve just in case
-search_range = np.arange(10, 120, 1)
+search_range = np.arange(10, 500, 1)
 
 qs = generate_qs_from_probes(probes, search_range, params.fs)           
 w = be.NCap(bipolar_signals, qs)
@@ -99,10 +119,10 @@ for i in range(len(w)):
     v = search_range[i]
     w_quad[i] = w[i] / (v**2)
 
-plt.plot(w)
+plt.bar(search_range, w)
 #plt.plot(w)
 plt.show()
-
+"""
 savemat(file_name,
     {
         "cv_diss": cv_dis,
@@ -114,5 +134,5 @@ savemat(file_name,
         "singular_signals": singular_signals,
         "bipolar_signals": bipolar_signals,
     })
-
+"""
 

@@ -55,7 +55,7 @@ class Model():
 
                 distance = probe.get_position() - source.get_position()
                 dt = int(round((distance/velocity)*self.params.fs))
-                
+                print(dt)
                 signal = signal + (source.get_sfap(velocity, dt) * fibre_count)
         
         return signal

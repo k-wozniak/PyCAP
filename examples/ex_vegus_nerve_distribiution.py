@@ -7,12 +7,21 @@ from scipy.io import loadmat, savemat
 import matplotlib.pyplot as plt
 
 def process_distributions(diss, resolution, target_resolution, min_cv, max_cv):
+    diss = scale_distributions(diss, resolution, target_resolution)
+
+    # perform velocity scaling (Should be replaced my matrix multiplication)
+    new_cv_range = np.arange(min_cv, max_cv + (target_resolution/2), target_resolution)
+    diss = diss / (new_cv_range**2)
+
+    return diss
+
+def scale_distributions(diss, resolution, target_resolution):
     # resolution = 0.1
     # target_resolution = 1
     padding = round(target_resolution/(2*resolution))
 
     # perform resolution scaling
-    diss = np.sum(diss, 0)
+    #diss = np.sum(diss, 0)
     diss = np.pad(diss, (padding, padding), 'constant')
     
     mask = np.ones(padding*2)
@@ -22,22 +31,18 @@ def process_distributions(diss, resolution, target_resolution, min_cv, max_cv):
     diss = np.convolve(mask, diss, 'valid')
     diss = diss[::(padding*2)] # start:stop:step
 
-    # perform velocity scaling (Should be replaced my matrix multiplication)
-    new_cv_range = np.arange(min_cv, max_cv + (target_resolution/2), target_resolution)
-    diss = diss / (new_cv_range**2)
-
     return diss
 
 #caps = loadmat("meanCAP2.mat")['d']
 #caps = loadmat("meanCAP2scaled.mat")['out']
 #caps = loadmat("CAP.mat")['d']
 
-data = loadmat("eCAPs_with_classes")
+data = loadmat("eCAPs_with_classes.mat")
 
 keys = np.array(data['keys'][0])
 caps = np.array(data['samples'])
 
-stimulation_levels = np.sort(np.unique(keys))
+stimulation_levels = np.sort(np.unique(keys))[-1:]
 
 num_electrodes, signal_length, _ = caps.shape
 
@@ -77,33 +82,32 @@ for stimulation_level in stimulation_levels:
     for s in positions:
         signals = (caps[:, :, s])
         
-        diss_mean_two_CAP.append(be.mean_two_cap(signals, qs))
-        diss_NCAP.append(be.NCap(signals, qs))
-        diff_NCAP_Pairs.append(be.NCapPairs(signals, qs))
-        diss_VSR.append(be.VSR(signals.T, fs, du, min_cv, target_resolution, max_cv+1))
+        #diss_mean_two_CAP.append(scale_distributions(be.mean_two_cap(signals, qs), resolution, target_resolution))
+        #diss_NCAP.append(scale_distributions(be.NCap(signals, qs), resolution, target_resolution))
+        #diff_NCAP_Pairs.append(scale_distributions(be.NCapPairs(signals, qs), resolution, target_resolution))
+        diss_VSR.append(be.VSR(signals, fs, du, min_cv, target_resolution, max_cv+1))
     
 
     # Process multiple distributions into one
-    diss_mean_two_CAP = process_distributions(diss_mean_two_CAP, resolution, target_resolution, min_cv, max_cv)
-    diss_NCAP = process_distributions(diss_NCAP, resolution, target_resolution, min_cv, max_cv)
-    diff_NCAP_Pairs = process_distributions(diff_NCAP_Pairs, resolution, target_resolution, min_cv, max_cv)
-    diss_VSR = np.mean(diss_VSR, axis=0)
-
+    #diss_mean_two_CAP = process_distributions(diss_mean_two_CAP, resolution, target_resolution, min_cv, max_cv)
+    #diss_NCAP = process_distributions(diss_NCAP, resolution, target_resolution, min_cv, max_cv)
+    #diff_NCAP_Pairs = process_distributions(diff_NCAP_Pairs, resolution, target_resolution, min_cv, max_cv)
+    
     # Save results
     results[stimulation_level] = {
-        "mean_two_cap": diss_mean_two_CAP,
-        "ncap": diss_NCAP,
-        "ncap_pairs": diff_NCAP_Pairs,
+        #"mean_two_cap": diss_mean_two_CAP,
+        #"ncap": diss_NCAP,
+        #"ncap_pairs": diff_NCAP_Pairs,
         "VSR": diss_VSR,
     }
 
 items = results.items()
 to_save = {
-    "mean_two_cap": [value["mean_two_cap"] for _, value in items],
-    "ncap": [value["ncap"] for _, value in items],
-    "ncap_pairs": [value["ncap_pairs"] for _, value in items],
+    #"mean_two_cap": [value["mean_two_cap"] for _, value in items],
+    #"ncap": [value["ncap"] for _, value in items],
+    #"ncap_pairs": [value["ncap_pairs"] for _, value in items],
     "VSR": [value["VSR"] for _, value in items],
     "stimulations": [key for key, _ in items],
 }
 
-savemat("loads_of_data_to_sort0-20.mat", to_save)
+savemat("VSRdiss.mat", to_save)

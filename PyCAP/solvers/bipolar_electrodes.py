@@ -1,5 +1,6 @@
 import numpy as np
 from numpy.fft import fft, ifft, fftshift, ifftshift
+from math import floor
 
 from PyCAP.solvers.utils.quadratic_solvers import quadratic_solver
 from PyCAP.solvers.utils.signal_operations import extend_signals_toeplitz, moving_average
@@ -11,7 +12,7 @@ def two_cap(c1, c2, q1, q2, q3, q4):
 
     Q1 = (q4 - q3)
     Q2 = (q2 - q1)
-    
+
     C = np.matmul(conv_signals[0], Q1) - np.matmul(conv_signals[1], Q2)
 
     return quadratic_solver(C)
@@ -81,13 +82,16 @@ def NCapPairs(signals, qs, initial_values = None, solver_algorithm = quadratic_s
 
     conv_signals = extend_signals_toeplitz(signals, qs_length)
     
+    # Generate pairs
+    middle = round(num_signals/2)
+    pairs = ([(0, x) for x in range(middle, num_signals)] + 
+        [(num_signals-1, x) for x in range(1, middle+1)])
+
     C = np.zeros((conv_signals[0].shape[0], qs[0].shape[1]))
-    for i in range(0, num_signals-1, 2):
+    for i, j in pairs:
         c1 = conv_signals[i]
         q1 = qs[i]
         q2 = qs[i+1]
-
-        j = i+1
         
         c2 = conv_signals[j]
         q3 = qs[j]
@@ -99,6 +103,7 @@ def NCapPairs(signals, qs, initial_values = None, solver_algorithm = quadratic_s
         C2Q1 = np.matmul(c2, q1)
 
         C = (C + C1Q4 - C1Q3 - C2Q2 + C2Q1)
+
 
     return solver_algorithm(C, initial_values)
 

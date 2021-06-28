@@ -1,8 +1,6 @@
 from scipy.linalg import toeplitz
 import numpy as np
 
-import scipy
-
 def extend_signals_toeplitz(signals, qs_length):
     """ Extends a 1D signal array to a add each possible shift """
     extended_signals = []

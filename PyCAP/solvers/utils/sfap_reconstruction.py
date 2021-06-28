@@ -91,7 +91,7 @@ def recreate_A_matrix(A: np.ndarray):
     # Take a mean of each row excluding zeros. As the values are floats each 
     # close value to zero is replaced by nan. After taking the mean, nan is 
     # reverted back to 0
-    shifted_A[abs(shifted_A) < 0.0001] = np.nan
+    #shifted_A[abs(shifted_A) < 0.000001] = np.nan
     # Warning expected as if all values in the row are NaN it shows
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)

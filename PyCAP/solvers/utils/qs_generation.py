@@ -2,11 +2,13 @@ from PyCAP.recordingProbes.recording_probe import RecordingProbe
 from PyCAP.solvers.recorded_signals import RecordedSignals
 import numpy as np
 from typing import List
+from numba import jit
 
 """ Helper functions for generation Q matrices while generating the problem 
     space.
 """
 
+@jit(nopython=True)
 def generate_q(signal_length: int, position: float, velocities: np.ndarray, fs: int):
     """ Generates Q matrix at the given position for the velocities passed at 
         the given frequency and of the signal length passad """

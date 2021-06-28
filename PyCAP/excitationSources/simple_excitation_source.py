@@ -25,4 +25,4 @@ class SimpleExcitationSource(ExcitationSource):
         temp = np.pad(self.SFAP, (time_shift, 0))
         temp = temp if time_shift == 0 else temp[:-time_shift]
 
-        return temp
+        return temp * (velocity ** 2)

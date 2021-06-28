@@ -12,13 +12,12 @@ class AccurateExcitationSource(ExcitationSource):
 
     """
 
-    A: int = 40744
-    B: int = 15e+3
-    n: int = 1
-
     SFAP: np.ndarray
 
     fs: int = 100e3
+
+    base_voltage = 0
+    micro = 10e-6
 
     # Activation delay
     '''
@@ -39,7 +38,7 @@ class AccurateExcitationSource(ExcitationSource):
 
     def get_sfap(self, velocity: float, time_shift: int = 0) -> np.ndarray:
         """ Returns the same SFAP for each velocity """
-        temp = np.pad(self.SFAP, (time_shift, 0))
+        temp = np.pad(self.SFAP, (time_shift, 0), 'constant', constant_values=(self.base_voltage, self.base_voltage))
         temp = temp[:-time_shift]
 
         return temp * (velocity ** 2)
@@ -51,14 +50,14 @@ class AccurateExcitationSource(ExcitationSource):
         t = t_ms * 10e3
 
         if t <= 0 or t >= 4.4:
-            return -70
+            out = self.base_voltage
+        else:
+            fx = lambda x : (-0.0419396104*(x**15) + 1.4927258073*(x**14) - 23.5214743134*(x**13)
+                + 215.0760694124*(x**12) - 1252.5931511956*(x**11) + 4761.0829202938*(x**10)
+                - 11343.7377609156*(x**9) + 13435.1218524251*(x**8) + 7485.2236507130*(x**7)
+                - 57638.1709034768*(x**6) + 100870.7157785190*(x**5) - 91671.1735290352*(x**4)
+                + 44432.3147612717*(x**3) - 10098.5953278389*(x**2) + 879.2386412865*x - 6.1742125873)
 
-        fx = lambda x : (-0.0419396104*(x**15) + 1.4927258073*(x**14) - 23.5214743134*(x**13)
-            + 215.0760694124*(x**12) - 1252.5931511956*(x**11) + 4761.0829202938*(x**10)
-            - 11343.7377609156*(x**9) + 13435.1218524251*(x**8) + 7485.2236507130*(x**7)
-            - 57638.1709034768*(x**6) + 100870.7157785190*(x**5) - 91671.1735290352*(x**4)
-            + 44432.3147612717*(x**3) - 10098.5953278389*(x**2) + 879.2386412865*x - 76.1742125873)
+            out = fx(t) -10
 
-        out = fx(t)
-
-        return out
+        return (out * self.micro)

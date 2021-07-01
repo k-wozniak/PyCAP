@@ -54,10 +54,10 @@ distance_first_electrode = 80e-3
 electrode_positions = (np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]) * du) + distance_first_electrode
 
 # Search definitions
-resolution = 0.1
+resolution = 1
 target_resolution = 1
 min_cv = 10
-max_cv = 120
+max_cv = 75
 search_range = np.arange(min_cv, max_cv, resolution)
 
 # Pre-calculate qs as they do not change between runs
@@ -100,6 +100,9 @@ for stimulation_level in stimulation_levels:
         #"ncap_pairs": diff_NCAP_Pairs,
         "VSR": diss_VSR,
     }
+
+plt.plot(diss_VSR)
+plt.show()
 
 items = results.items()
 to_save = {

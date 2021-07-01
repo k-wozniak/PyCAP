@@ -80,16 +80,8 @@ singular = OverlappingMultipolarElectrodes([1])
 singular.add_recording_probes(probes)
 singular_signals = singular.get_all_recordings()
 
-s = bipolar_signals[0].T
-wss = 10
-b = np.convolve(s, np.ones(wss), 'valid') / wss
-plt.plot(b)
-#plt.plot(singular_signals[0].T)
-#plt.plot(singular_signals[1].T)
-plt.show()
-
 # Solve just in case
-search_range = np.arange(10, 120, 1)
+search_range = np.arange(10, 40, 1)
 
 qs = generate_qs_from_probes(probes, search_range, params.fs)           
 
@@ -100,8 +92,8 @@ for i in range(len(w)):
     v = search_range[i]
     w_quad[i] = w[i] / (v**2)
 
-w_VSR = be.VSR(singular_signals.T, params.fs, probes_center_to_center_distance, 10, 1, 121)
+w_VSR = be.VSR(bipolar_signals, params.fs, probes_center_to_center_distance, 10, 1, 40)
 
-#plt.plot(w)
+plt.plot(w)
 plt.plot(w_VSR)
 plt.show()

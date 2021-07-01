@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 #caps = loadmat("meanCAP2scaled.mat")['out']
 #caps = loadmat("CAP.mat")['d']
 # _interpolated10
-caps = loadmat("meanCAP2.mat")['d']
+caps = loadmat("meanCAP.mat")['d']
 caps = np.array(caps).T
 caps = np.flip(caps, 0)
 
@@ -38,15 +38,15 @@ for pos in electrode_positions:
 
 
 # Methods used to determine distributions
-#diss_mean = be.mean_two_cap(caps, qs)
-#diss_ncap = be.NCap(caps, qs)
+diss_mean = be.mean_two_cap(caps, qs)
+diss_ncap = be.NCap(caps, qs)
 diss_pairs = be.NCapPairs(caps, qs)
-#diss_VSR = be.VSR(caps, fs, du, min_cv, resolution, max_cv)
+diss_VSR = be.VSR(caps, fs, du, min_cv, resolution, max_cv)
 
-#diss_mean[diss_mean < 0] = 0
-#diss_ncap[diss_ncap < 0] = 0
+diss_mean[diss_mean < 0] = 0
+diss_ncap[diss_ncap < 0] = 0
 diss_pairs[diss_pairs < 0] = 0
-#diss_VSR[diss_VSR < 0] = 0
+diss_VSR[diss_VSR < 0] = 0
 
 diss_pairs =  diss_pairs / (search_range**2)
 diss_pairs = moving_average(diss_pairs, 5)
@@ -54,10 +54,10 @@ diss_pairs = diss_pairs / np.sum(diss_pairs)
 
 diss_pairs = diss_pairs * 1e6
 diss_pairs = np.round(diss_pairs)
-
-plt.bar(search_range, diss_pairs)
+"""
+plt.bar(search_range, diss_VSR)
 plt.show()
-
+"""
 print(diss_pairs)
 
 A = find_matrix_A(caps[0, :], qs[0], diss_pairs) * 100
@@ -74,10 +74,7 @@ plt.plot(AA[:, 0])
 plt.show()
 
 
-
 # Try to scale
-
-"""
 title = "w. Resolution: " + str(resolution) + "Range: " + str(min_cv) + " - " + str(max_cv)
 plt.suptitle(title) #, fontsize=16)
 
@@ -153,4 +150,3 @@ plt.title("diff VSR")
 plt.bar(search_range, diss_VSR)
 
 plt.show()
-"""

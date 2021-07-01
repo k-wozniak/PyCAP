@@ -131,3 +131,57 @@ def closest_unitary(A):
     U = np.matrix(V.dot(Wh))
     return U
 '''
+
+def find_sfap_A(signal: np.ndarray, q: np.ndarray, w: np.ndarray):
+    """ Finds the minimum to the problem of xA = B, where 
+    B = signal
+    A = q*w
+    x = A matrix from the signal equation
+    signal = A*Q*w
+
+    For simple bipolar recording Q = Q2 - Q1
+    """
+    signal = np.asmatrix(signal)
+    q = np.asmatrix(q)
+    w = np.asmatrix(w)
+
+    # Check the signals shape should be Kx1
+    signal = signal.T if signal.shape[0] == 1 else signal
+
+    # Check w shape should be Nx1
+    # Won't work if there is just one N but that defeats the point
+    w = w.T if w.shape[0] == 1 else w
+    N = w.shape[0]
+
+    # Check a qs shape should be PxN (Assumes all qs are the same)
+    P = q.shape[0]
+    Nq = q.shape[1]
+
+    if Nq != N and P == N:
+        q = q.T
+        Nq = q.shape[1]
+
+    elif Nq != N and P != N:
+        raise Exception("Incorrectly shaped matrices.")
+
+    qw = np.matmul(q, w)
+
+    
+
+    # Generate teoplitz matrix with ones and zeros only
+    # Needed to find linear equations
+
+    # Dot multiply the teoplitz matrix with the A matrix
+
+    # Reverse order of each row of the matrix by taking all 
+    # Non zero values and placing them in in a fliped version
+
+    # Use linear solver to find the values
+
+    # Recreate A matrix
+
+    pass
+
+def get_A_matrix_from_SFAP(sfap: np.ndarray):
+    # Creates teoplitz matrix A
+    pass

@@ -128,7 +128,7 @@ def VSR(d, fs, du, vmin, vstep, vmax) -> np.ndarray:
             vmax - Stopping velocity
     """
     d = np.array(d).T
-    #d = np.fliplr(d)
+    d = np.fliplr(d)
 
     # Number of velocities
     v = np.arange(vmin, vmax, vstep)

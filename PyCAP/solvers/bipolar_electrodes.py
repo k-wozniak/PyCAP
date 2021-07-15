@@ -3,7 +3,7 @@ from numpy.fft import fft, ifft, fftshift, ifftshift
 from scipy.linalg import matmul_toeplitz
 from typing import Tuple
 
-from PyCAP.solvers.utils.quadratic_solvers import quadratic_solver
+from PyCAP.solvers.utils.quadratic_solvers import quadratic_solver, cumminsolver_helper
 from PyCAP.solvers.utils.signal_operations import moving_average
 
 def get_rc(signal, qs_length) -> Tuple[np.ndarray, np.ndarray]:
@@ -28,7 +28,7 @@ def two_cap(s1, s2, q1, q2, q3, q4) -> np.ndarray:
     C = (matmul_toeplitz(rc1, Q1, check_finite=False) - 
          matmul_toeplitz(rc2, Q2, check_finite=False))
 
-    return quadratic_solver(C)
+    return cumminsolver_helper(C)
 
 def mean_two_cap(signals, qs):
     """ Extension of the two cap method where each possible solution to every 
@@ -96,6 +96,8 @@ def NCapPairs(signals, qs, initial_values = None, solver_algorithm = quadratic_s
     pairs = ([(0, x) for x in range(middle, num_signals)] + 
         [(num_signals-1, x) for x in range(1, middle+1)])
 
+    print(pairs)
+
     C = np.zeros((signals[0].shape[0]+qs_length-1, qs[0].shape[1]))
     for i, j in pairs:
         rc1 = get_rc(signals[i], qs_length)
@@ -111,6 +113,9 @@ def NCapPairs(signals, qs, initial_values = None, solver_algorithm = quadratic_s
         C2Q2 = matmul_toeplitz(rc2, q2)
         C2Q1 = matmul_toeplitz(rc2, q1)
 
+        # 𝐶1𝑄2−𝐶2𝑄1
+        # Qn+1  = Q[n+2] - Q[n+1]
+        # Qn    = Q[n+1] - Q[n]
         C = (C + C1Q4 - C1Q3 - C2Q2 + C2Q1)
 
 

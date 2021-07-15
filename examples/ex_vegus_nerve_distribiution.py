@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 def process_distributions(diss, resolution, target_resolution, min_cv, max_cv):
     diss = scale_distributions(diss, resolution, target_resolution)
 
-    # perform velocity scaling (Should be replaced my matrix multiplication)
     new_cv_range = np.arange(min_cv, max_cv + (target_resolution/2), target_resolution)
     diss = diss / (new_cv_range**2)
 

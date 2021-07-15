@@ -166,8 +166,6 @@ def find_sfap_A(signal: np.ndarray, q: np.ndarray, w: np.ndarray):
 
     qw = np.matmul(q, w)
 
-    
-
     # Generate teoplitz matrix with ones and zeros only
     # Needed to find linear equations
 

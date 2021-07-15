@@ -5,6 +5,7 @@ from PyCAP.compoundElectrodes.overlapping_multipolar_electrodes import Overlappi
 from PyCAP.excitationSources.simple_excitation_source import SimpleExcitationSource
 from PyCAP.model.model_params import ModelParams
 from PyCAP.model.model import Model
+from PyCAP.analysis_utils import post_conv_analysis
 
 from PyCAP.solvers import bipolar_electrodes as be
 from PyCAP.solvers.utils.qs_generation import generate_qs_from_probes
@@ -30,7 +31,22 @@ cv_dis = np.c_[cv_dis, np.ones(cv_dis.shape[0])] # A uniform distribution
 #cv_dis = np.c_[cv_dis, cv_dis_vals]
 
 # Set model parameters
-cv_dis = np.c_[np.array(30), np.array(1)]
+#cv_dis = np.c_[np.array(30), np.array(1)]
+
+cv_dis_int = np.arange(10 + 5, 74 + 1 + 5, 1)
+cv_dis = np.arange(10 + 5, 74 + 0.1 + 5, 0.01)
+
+cv_dis_vals = np.array([1765, 1218, 671, 247, 246, 244, 410, 1741, 5019, 11000, 20126, 31179, 42446, 51848, 58376, 60924, 60805, 57797, 53761, 47958, 42885, 37325, 33281, 29049, 27331, 24932, 24232, 22775, 22940, 21248, 21577, 19936, 19504, 17983, 17138, 15754, 13903, 12666, 10917, 9240, 7571, 6598, 4866, 3723, 3146, 1719, 1345, 658, 369, 251, 488, 488, 1011, 1421, 1628, 1335, 1809, 1629, 1329, 927, 927, 453, 743, 1267, 1901])
+cv_dis_vals[-5:] = 0
+cv_dis_vals[:5] = 0
+
+cv_dis_vals = np.interp(cv_dis, cv_dis_int, cv_dis_vals)
+
+plt.figure()
+plt.bar(cv_dis, cv_dis_vals)
+plt.show(block=False)
+
+cv_dis = np.c_[cv_dis, cv_dis_vals]
 
 params = ModelParams(cv_dis, 0.02)
 params.fs = 100e3 # Hz
@@ -81,19 +97,27 @@ singular.add_recording_probes(probes)
 singular_signals = singular.get_all_recordings()
 
 # Solve just in case
-search_range = np.arange(10, 40, 1)
+search_range = np.arange(10, 80, 1)
 
 qs = generate_qs_from_probes(probes, search_range, params.fs)           
 
-w = be.NCap(bipolar_signals, qs)
+
+w = be.NCapPairs(bipolar_signals, qs)
+#post_conv_analysis(bipolar_signals, qs, w, plot_pairs = [(0, 8)], show_plot = True)
+
+plt.figure()
+plt.plot(bipolar_signals[0])
+plt.show(block=False)
 
 w_quad = w.copy()
-for i in range(len(w)):
-    v = search_range[i]
-    w_quad[i] = w[i] / (v**2)
+w_quad = w_quad / search_range**2
 
-w_VSR = be.VSR(bipolar_signals, params.fs, probes_center_to_center_distance, 10, 1, 40)
+w_VSR = be.VSR(bipolar_signals, params.fs, probes_center_to_center_distance, 10, 1, 80)
 
-plt.plot(w)
-plt.plot(w_VSR)
+plt.figure()
+plt.bar(search_range, w)
+plt.show(block = False)
+
+plt.figure()
+plt.plot(search_range, w_VSR)
 plt.show()

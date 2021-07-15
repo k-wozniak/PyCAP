@@ -34,6 +34,9 @@ cv_dis_vals[:5] = 0
 
 cv_dis_vals = np.interp(cv_dis, cv_dis_int, cv_dis_vals)
 
+#plt.bar(cv_dis, cv_dis_vals)
+#plt.show()
+
 #cv_min, cv_max, cv_step = (10, 80, 1)
 #cv_dis = np.arange(cv_min, cv_max + cv_step, cv_step)
 #cv_dis_vals = 100000*((2*norm.pdf(cv_dis,25,8)) + norm.pdf(cv_dis,50,6))
@@ -92,6 +95,10 @@ bipolar.add_recording_probes(probes)
 bipolar_signals = bipolar.get_all_recordings()
 
 singular_signals = [s.output_signal for s in probes]
+
+plt.plot(-singular_signals[0])
+plt.plot(singular_signals[1])
+plt.show()
 
 fig, ax = plt.subplots(9)
 for i in range(9):

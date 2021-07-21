@@ -77,9 +77,9 @@ diss_pairs = diss_pairs / np.sum(diss_pairs)
 
 diss_pairs = diss_pairs * 1e6
 diss_pairs = np.round(diss_pairs)
+
+
 '''
-
-
 w = []
 for x in range(8):
     f1 = x
@@ -89,8 +89,13 @@ for x in range(8):
 w = np.asarray(w)
 w_mean = np.mean(w, axis=0)
 
-#post_conv_analysis(caps, qs, w, plot_pairs = [(f1, f2)], show_plot = True)
 
+f1 = 0
+f2 = 1
+w = be.two_cap(caps[f1], caps[f2], qs[f1], qs[f1+1], qs[f2], qs[f2+1])
+post_conv_analysis(caps, qs, diss_ncap, plot_pairs = [(f1, f2)], show_plot = True)
+
+"""
 w_mean = diss_ncap
 
 plt.figure()
@@ -101,7 +106,6 @@ plt.figure()
 plt.bar(search_range, (w_mean / search_range**2))
 plt.show()
 
-"""
 plt.bar(search_range, diss_VSR)
 plt.show()
 

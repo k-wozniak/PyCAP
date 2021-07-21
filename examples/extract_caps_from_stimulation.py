@@ -2,6 +2,9 @@ import scipy
 import scipy.io
 import scipy.signal
 import numpy as np
+from statistics import mode
+
+import matplotlib.pyplot as plt
 
 class StimulationData:
     """ Keeps track of the stimulation data. """
@@ -13,7 +16,8 @@ class StimulationData:
     def __init__(self, path: str, raw_data = "rawdata", sample_rate = "sampleRate", stimulus_pulse = "stimulusPulse", remove_from_start = 2):
         loaded_data = scipy.io.loadmat(path)
 
-        self.raw_data = loaded_data[raw_data]
+        self.raw_data = loaded_data[raw_data].T
+        self.raw_data = self.raw_data[1:, :] # remove time series
         # For some reason ofthen array in an array, so any operation such as sum, 
         # mean will take the single value and return as a number only
         self.sample_rate = np.sum(loaded_data[sample_rate])
@@ -28,26 +32,25 @@ class StimulationData:
         pulses[pulses < boundry] = 0 # remove noise to have a perfect square wave
         pulses[pulses >= boundry] = 1
 
-        diff = np.diff(pulses) # using the diff find the begining edge of the wave
+        diff = np.diff(pulses) # using the diff find the beginning edge of the wave
         locations = np.where(diff >= 1)[0] # find locations of the wave
-        locations = locations[remove_from_start:] # remove n number of begining pulses
+        locations = locations[remove_from_start:] # remove n number of beginning pulses
 
         return locations
 
     def normalise_signals(self, signals):
         signals = np.copy(signals)
-        
-        signals = [scipy.signal.medfilt(signals[:, i], 7) for i in range(signals.shape[1])]
-        signals = [np.convolve(signals[:, i], np.ones(5), 'valid') / 5 for i in range(signals.shape[1])]
-        modes = max(set(round(signals, 3)), key=signals.count)
-        signals = signals - max(set(round(signals, 3)), key=signals.count)
+
+        for s in range(signals.shape[0]):
+            signals[s, :] = scipy.signal.medfilt(signals[s, :], 7)
+            signals[s, :] = signals[s, :] - mode(np.around(signals[s, :], 3))
 
         return signals
 
     def get_signals(self, stim_level: int, levels: int, window_length = 1500):
         min_l = np.min(abs(np.diff(self.stimulation_locations)))
 
-        if min_l > window_length:
+        if min_l < window_length:
             raise Exception("Window length too large. Impulses will overlap.")
 
         if len(self.stimulation_locations) % levels != 0:
@@ -55,18 +58,17 @@ class StimulationData:
 
         # A for loop so it is easier to read
         signals = []
-        for i in range(0, len(self.stimulation_locations), stim_level):
+        data = np.array(self.raw_data)
+        for i in range(stim_level, len(self.stimulation_locations), levels):
             start = self.stimulation_locations[i]
             end = start + window_length
-            signals.append(self.raw_data[ start:end, :])
+            signals.append(data[:, start:end])
 
         return signals
 
-stimulaiton_data = StimulationData("electricalStimulation.mat")
+stimulation_data = StimulationData("electricalStimulation.mat")
 
-t1 = np.array([1, 2, 3, 4, 5])
+signals = stimulation_data.get_signals(50, 51)
 
-t2 = t1.T
-
-print(scipy.signal.medfilt(t1, 3))
-print(scipy.signal.medfilt(t2, 3))
+plt.plot(np.array(signals[5]).T)
+plt.show()

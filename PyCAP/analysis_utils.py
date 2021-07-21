@@ -1,11 +1,11 @@
 """
-Contains functions used to analysise obtained distributions, such as post convolution analysis 
+Contains functions used to analyse obtained distributions, such as post convolution analysis 
 """
 
 import numpy as np
 import matplotlib.pyplot as plt
 
-def post_conv_analysis(signals, qs, distribution, plot_pairs = [(0, 1)], show_plot = True):
+def post_conv_analysis(signals, qs, distribution, plot_pairs, show_plot = True):
     # Signlas - all signals used to generate distribution
     # qs - Q matrices used to generate the distribution
     # distribution - obtained diss
@@ -16,8 +16,8 @@ def post_conv_analysis(signals, qs, distribution, plot_pairs = [(0, 1)], show_pl
         s1 = signals[p1]
         s2 = signals[p2]
 
-        ct1 = np.convolve(s1, (qs[p2+1] - qs[p2])@distribution)
-        ct2 = np.convolve(s2, (qs[p1+1] - qs[p1])@distribution)
+        ct1 = np.convolve(s1, qs[p2+1]@distribution) + np.convolve(s2, qs[p1]@distribution)
+        ct2 = np.convolve(s1, qs[p2]@distribution) + np.convolve(s2, qs[p1+1]@distribution)
 
         ssd = np.sum((ct1 - ct2)**2) # Fix it 
         print("SSD between signals: (" + str(p1) + ", " + str(p2) + ") is " + str(ssd))

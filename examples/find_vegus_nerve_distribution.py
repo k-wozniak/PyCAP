@@ -3,9 +3,10 @@ from PyCAP.solvers.utils.qs_generation import generate_q
 from PyCAP.solvers.utils.signal_operations import interpolate_signals
 from PyCAP.io.load import StimulationData
 import numpy as np
+from scipy.io import loadmat
 import matplotlib.pyplot as plt
 
-stimulation_data = StimulationData("electricalStimulation.mat")
+stimulation_data = StimulationData(loadmat("../electricalStimulation.mat"))
 
 signals_dataset = []
 for lv in [0]: #, 49, 48, 47, 46]:

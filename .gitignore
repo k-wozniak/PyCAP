@@ -357,3 +357,7 @@ found_distribiutions/
 
 *.mat
 *.xlsx
+
+# PyCharm .idea files and virtual environment
+.idea
+venv/

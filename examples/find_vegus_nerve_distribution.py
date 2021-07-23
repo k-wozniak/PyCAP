@@ -1,12 +1,14 @@
+from numpy.core.shape_base import block
 from PyCAP.solvers import bipolar_electrodes as be
 from PyCAP.solvers.utils.qs_generation import generate_q
 from PyCAP.solvers.utils.signal_operations import interpolate_signals
+import PyCAP.solvers.utils.sfap_reconstruction as sfap_rec
 from PyCAP.io.load import StimulationData
 import numpy as np
 from scipy.io import loadmat
 import matplotlib.pyplot as plt
 
-stimulation_data = StimulationData(loadmat("../electricalStimulation.mat"))
+stimulation_data = StimulationData(loadmat("../data/electricalStimulation.mat"))
 
 signals_dataset = []
 for lv in [0]: #, 49, 48, 47, 46]:
@@ -38,12 +40,18 @@ for pos in electrode_positions:
 diss_NCAP_Pairs = []
 #diss_VSR = []
 
+As = []
 for signals in signals_dataset:
     #diss_mean_two_CAP.append(be.mean_two_cap(signals, qs))
     #diss_NCAP.append(be.NCap(signals, qs))
-    diss_NCAP_Pairs.append(be.NCapPairs(signals, qs))
+    #diss_NCAP_Pairs.append(be.NCapPairs(signals, qs))
     #diss_VSR.append(be.VSR(signals, fs, du, min_cv, resolution, max_cv+1))
-
+    
+    w = be.NCapPairs(signals, qs)
+    diss_NCAP_Pairs.append(w)
+    
+    for i in range(len(signals)):
+        As.append(sfap_rec.find_sfap_A(signals[i], qs[i+1]-qs[i], w))
 """
 to_save = {
     "mean_two_cap": diss_mean_two_CAP,
@@ -56,10 +64,23 @@ to_save = {
 mean_diss = np.mean(diss_NCAP_Pairs, axis=0)
 std = np.std(diss_NCAP_Pairs, axis=0)
 
+plt.figure()
 plt.bar(search_range, mean_diss, yerr=std)
+plt.show(block=False)
 
-#plt.plot(search_range, mean_diss)
-#plt.fill_between(search_range, mean_diss+(std), mean_diss-(std))
+
+
+A = np.mean(As, axis=0)
+
+plt.figure()
+plt.plot(A[:, 0])
+plt.show(block=False)
+
+i = 2
+plt.figure()
+plt.plot((A@(qs[i+1]-qs[i])@w))
+plt.plot(signals[i])
+plt.show(block=False)
+
 plt.show()
-
 #savemat("disstributions-47-51.mat", to_save)

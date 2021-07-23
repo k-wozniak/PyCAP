@@ -11,6 +11,7 @@ import numpy as np
 import xlsxwriter
 
 import matplotlib.pyplot as plt
+from scipy.linalg import toeplitz
 
 class TestSFAPReconstruction(unittest.TestCase):
 
@@ -225,4 +226,11 @@ class TestSFAPReconstruction(unittest.TestCase):
             for row_num, data in enumerate([signals[0], signal_0]):
                 worksheet.write_row(row_num, 0, data)
     
-    
+    def test_the_principle(self):
+        C = np.array([[1], [2], [3]])
+        w = np.array([[0.1], [0.5], [0.4]])
+        q = np.array([[1,1,1], [2,2,2], [3,3,3]])
+
+        sfaps = reconstruct.find_sfap_A(C, q, w)
+
+        np.allclose(np.dot(q@w, sfaps), C)

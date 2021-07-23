@@ -9,6 +9,8 @@ from PyCAP.model.model import Model
 from PyCAP.solvers import bipolar_electrodes as be
 from PyCAP.solvers.utils.qs_generation import generate_qs_from_probes
 
+import PyCAP.solvers.utils.sfap_reconstruction as sfap_rec
+
 import numpy as np
 from scipy.io import savemat
 import matplotlib.pyplot as plt
@@ -37,15 +39,16 @@ cv_dis_vals = np.interp(cv_dis, cv_dis_int, cv_dis_vals)
 #plt.bar(cv_dis, cv_dis_vals)
 #plt.show()
 
-#cv_min, cv_max, cv_step = (10, 80, 1)
-#cv_dis = np.arange(cv_min, cv_max + cv_step, cv_step)
-#cv_dis_vals = 100000*((2*norm.pdf(cv_dis,25,8)) + norm.pdf(cv_dis,50,6))
-#cv_dis_vals = np.round(cv_dis_vals)
-
-#plt.bar(cv_dis, cv_dis_vals)
-#plt.show(block=False)
-
-cv_dis = np.c_[cv_dis, cv_dis_vals]
+cv_min, cv_max, cv_step = (10, 80, 1)
+cv_dis_range = np.arange(cv_min, cv_max + cv_step, cv_step)
+cv_dis_vals = 100000*((2*norm.pdf(cv_dis_range,25,8)) + norm.pdf(cv_dis_range,50,6))
+cv_dis_vals = np.round(cv_dis_vals)
+"""
+plt.figure()
+plt.bar(cv_dis, cv_dis_vals)
+plt.show(block=False)
+"""
+cv_dis = np.c_[cv_dis_range, cv_dis_vals]
 
 # Set model parameters
 #cv_dis = np.c_[np.array(80), np.array(1)]
@@ -96,9 +99,39 @@ bipolar_signals = bipolar.get_all_recordings()
 
 singular_signals = [s.output_signal for s in probes]
 
+qs = generate_qs_from_probes(probes, np.arange(cv_min, cv_max + cv_step, cv_step), params.fs)  
+
+#w = cv_dis_vals
+w = cv_dis_vals * (cv_dis_range**2)
+
+As = []
+for i in range(len(singular_signals)):
+    As.append(sfap_rec.find_sfap_A(singular_signals[i], qs[i], w))
+
+A1 = np.mean(As, axis=0)
+
+As = []
+for i in range(len(bipolar_signals)):
+    As.append(sfap_rec.find_sfap_A(bipolar_signals[i], qs[i+1]-qs[i], w))
+
+A2 = np.mean(As, axis=0)
+
+A = sfap_rec.find_sfap_A_set(bipolar_signals, qs, w)
+
+# Recreate A matrix
+plt.figure()
+#plt.plot(A1[:, 0])
+i = 3
+plt.plot((A2@(qs[i+1]-qs[i])@w))
+plt.plot(bipolar_signals[i])
+plt.show(block=False)
+
+'''
+plt.figure()
 plt.plot(-singular_signals[0])
 plt.plot(singular_signals[1])
-plt.show()
+plt.show(block=False)
+
 
 fig, ax = plt.subplots(9)
 for i in range(9):
@@ -112,7 +145,7 @@ plt.figure()
 plt.plot(bipolar_signals.T[:700, 8])
 plt.plot(bipolar_signals.T[:700, 0])
 plt.show(block=False)
-
+'''
 
 
 """

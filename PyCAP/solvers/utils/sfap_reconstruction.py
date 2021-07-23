@@ -8,6 +8,8 @@ import numpy as np
 import warnings
 from typing import List
 
+
+from scipy.linalg import toeplitz
 import matplotlib.pyplot as plt
 
 def find_matrix_A(signal: np.ndarray, q: np.ndarray, w: np.ndarray):
@@ -141,9 +143,9 @@ def find_sfap_A(signal: np.ndarray, q: np.ndarray, w: np.ndarray):
 
     For simple bipolar recording Q = Q2 - Q1
     """
-    signal = np.asmatrix(signal)
-    q = np.asmatrix(q)
-    w = np.asmatrix(w)
+    signal = np.array(signal)
+    q = np.array(q)
+    w = np.array(w)
 
     # Check the signals shape should be Kx1
     signal = signal.T if signal.shape[0] == 1 else signal
@@ -158,28 +160,55 @@ def find_sfap_A(signal: np.ndarray, q: np.ndarray, w: np.ndarray):
     Nq = q.shape[1]
 
     if Nq != N and P == N:
-        q = q.T
+        q = q.T 
         Nq = q.shape[1]
 
     elif Nq != N and P != N:
         raise Exception("Incorrectly shaped matrices.")
 
-    qw = np.matmul(q, w)
+    qw = q@w
 
+    t = toeplitz(np.ones((P,1)), np.zeros((P,1)))
+
+    x = t * qw.T # The order is very important
+
+    for r in range(1, x.shape[0]):
+        x[r, :r+1] = np.flip(x[r, :r+1])
+
+    A = np.linalg.lstsq(x, signal.T, rcond=None)[0]
+    A = toeplitz(A, np.zeros((len(A), 1)))
+    #A = np.linalg.solve(x, signal)
+
+    
     # Generate teoplitz matrix with ones and zeros only
     # Needed to find linear equations
 
     # Dot multiply the teoplitz matrix with the A matrix
 
     # Reverse order of each row of the matrix by taking all 
-    # Non zero values and placing them in in a fliped version
+    # Non zero values and placing them in in a flipped version
 
     # Use linear solver to find the values
 
     # Recreate A matrix
 
-    pass
+    return A
 
-def get_A_matrix_from_SFAP(sfap: np.ndarray):
-    # Creates teoplitz matrix A
-    pass
+def find_sfap_A_set(signals: np.ndarray, qs: np.ndarray, w: np.ndarray):
+    S = np.sum(signals, axis=0)
+
+    P = qs[0].shape[0]
+    T = np.zeros(P)
+    for x in range(len(signals)):
+        t = toeplitz(np.ones((P,1)), np.zeros((P,1)))
+        t = t * ((qs[x+1]-qs[x])@w)
+
+        for r in range(1, t.shape[0]):
+            t[r, :r+1] = np.flip(t[r, :r+1])
+
+        T = T + t
+    
+    A = np.linalg.lstsq(T, S)[0]
+    A = toeplitz(A, np.zeros((len(A), 1)))
+
+    return A

@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 
 from PyCAP.recordingProbes.simple_recording_probe import SimpleRecordingProbe
-from PyCAP.solvers.utils.qs_generation import generate_qs, generate_q
+from PyCAP.solvers.utils.qs_generation import generate_qs_from_probes
 from PyCAP.solvers.bipolar_electrodes import two_cap, mean_two_cap, NCap
 
 from PyCAP.recordingProbes.simple_recording_probe import SimpleRecordingProbe

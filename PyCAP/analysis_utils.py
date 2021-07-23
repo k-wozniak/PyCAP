@@ -19,7 +19,9 @@ def post_conv_analysis(signals, qs, distribution, plot_pairs, show_plot = True):
         ct1 = np.convolve(s1, qs[p2+1]@distribution) + np.convolve(s2, qs[p1]@distribution)
         ct2 = np.convolve(s1, qs[p2]@distribution) + np.convolve(s2, qs[p1+1]@distribution)
 
-        ssd = np.sum((ct1 - ct2)**2) # Fix it 
+        norm = lambda L : (L - np.min(L))/(np.max(L) - np.min(L))
+        ssd = np.sum((norm(ct1) - norm(ct2))**2)
+
         print("SSD between signals: (" + str(p1) + ", " + str(p2) + ") is " + str(ssd))
 
         if show_plot:

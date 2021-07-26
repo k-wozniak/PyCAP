@@ -11,18 +11,20 @@ import matplotlib.pyplot as plt
 stimulation_data = StimulationData(loadmat("../data/electricalStimulation.mat"))
 
 signals_dataset = []
-for lv in [0]: #, 49, 48, 47, 46]:
+for lv in [50, 49]: #, 49, 48, 47, 46]:
     signals_dataset.extend(stimulation_data.get_signals(lv, 51))
 
-signals_dataset = [interpolate_signals(sig, 5, 100e3) for sig in signals_dataset]
+#signals_dataset = [(interpolate_signals(sig, 5, 100e3), sig) for sig in signals_dataset]
 
-fs = 100e3 * 5 # Hz interpolated
+fs = 100e3 #* 5 # Hz interpolated
 du = 3.5e-3
 distance_first_electrode = 80e-3
 electrode_positions = (np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]) * du) + distance_first_electrode
 
+sfap_samples = int(0.005 * fs)
+
 # Search definitions
-resolution = 1
+resolution = 0.1
 min_cv = 10
 max_cv = 80
 search_range = np.arange(min_cv, max_cv, resolution)
@@ -50,8 +52,17 @@ for signals in signals_dataset:
     w = be.NCapPairs(signals, qs)
     diss_NCAP_Pairs.append(w)
     
-    for i in range(len(signals)):
-        As.append(sfap_rec.find_sfap_A(signals[i], qs[i+1]-qs[i], w))
+    A = sfap_rec.find_sfap_A_set(signals, qs, w, sfap_samples)
+
+    plt.figure()
+    plt.plot(A[:, 0])
+    plt.show(block=False)
+    i = 1 
+    plt.figure()
+    plt.plot((A@(qs[i+1]-qs[i])@w))
+    plt.plot(signals[i])
+    plt.show()
+
 """
 to_save = {
     "mean_two_cap": diss_mean_two_CAP,
@@ -79,7 +90,10 @@ plt.show(block=False)
 i = 2
 plt.figure()
 plt.plot((A@(qs[i+1]-qs[i])@w))
-plt.plot(signals[i])
+plt.show(block=False)
+
+plt.figure()
+plt.plot(signals_dataset[0][1][i])
 plt.show(block=False)
 
 plt.show()

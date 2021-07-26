@@ -116,7 +116,10 @@ for i in range(len(bipolar_signals)):
 
 A2 = np.mean(As, axis=0)
 
-A = sfap_rec.find_sfap_A_set(bipolar_signals, qs, w)
+plt.figure()
+plt.plot(A2[:, 0])
+plt.show(block=False)
+
 
 # Recreate A matrix
 plt.figure()

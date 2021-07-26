@@ -134,7 +134,7 @@ def closest_unitary(A):
     return U
 '''
 
-def find_sfap_A(signal: np.ndarray, q: np.ndarray, w: np.ndarray):
+def find_sfap_A(signal: np.ndarray, q: np.ndarray, w: np.ndarray, max_sfap_width_samples: int = 100):
     """ Finds the minimum to the problem of xA = B, where 
     B = signal
     A = q*w
@@ -168,7 +168,8 @@ def find_sfap_A(signal: np.ndarray, q: np.ndarray, w: np.ndarray):
 
     qw = q@w
 
-    t = toeplitz(np.ones((P,1)), np.zeros((P,1)))
+    c = np.concatenate([np.ones((max_sfap_width_samples,1)), np.zeros((P-max_sfap_width_samples,1))]) 
+    t = toeplitz(c, np.zeros((P,1)))
 
     x = t * qw.T # The order is very important
 
@@ -194,13 +195,14 @@ def find_sfap_A(signal: np.ndarray, q: np.ndarray, w: np.ndarray):
 
     return A
 
-def find_sfap_A_set(signals: np.ndarray, qs: np.ndarray, w: np.ndarray):
+def find_sfap_A_set(signals: np.ndarray, qs: np.ndarray, w: np.ndarray, max_sfap_width_samples: int = 100):
     S = np.sum(signals, axis=0)
 
     P = qs[0].shape[0]
     T = np.zeros(P)
     for x in range(len(signals)):
-        t = toeplitz(np.ones((P,1)), np.zeros((P,1)))
+        c = np.concatenate([np.ones((max_sfap_width_samples,1)), np.zeros((P-max_sfap_width_samples,1))])
+        t = toeplitz(c, np.zeros((P,1)))
         t = t * ((qs[x+1]-qs[x])@w)
 
         for r in range(1, t.shape[0]):
@@ -208,7 +210,7 @@ def find_sfap_A_set(signals: np.ndarray, qs: np.ndarray, w: np.ndarray):
 
         T = T + t
     
-    A = np.linalg.lstsq(T, S)[0]
+    A = np.linalg.lstsq(T, S, rcond=None)[0]
     A = toeplitz(A, np.zeros((len(A), 1)))
 
     return A

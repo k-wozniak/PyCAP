@@ -96,8 +96,6 @@ def NCapPairs(signals, qs, initial_values = None, solver_algorithm = quadratic_s
     pairs = ([(0, x) for x in range(middle, num_signals)] + 
         [(num_signals-1, x) for x in range(1, middle+1)])
 
-    print(pairs)
-
     C = np.zeros((signals[0].shape[0]+qs_length-1, qs[0].shape[1]))
     for i, j in pairs:
         rc1 = get_rc(signals[i], qs_length)

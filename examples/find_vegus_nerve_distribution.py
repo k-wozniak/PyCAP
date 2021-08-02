@@ -5,18 +5,21 @@ from PyCAP.solvers.utils.signal_operations import interpolate_signals
 import PyCAP.solvers.utils.sfap_reconstruction as sfap_rec
 from PyCAP.io.load import StimulationData
 import numpy as np
-from scipy.io import loadmat
+from scipy.io import loadmat, savemat
 import matplotlib.pyplot as plt
+from PyCAP.solvers.utils.signal_operations import moving_average
 
 stimulation_data = StimulationData(loadmat("../data/electricalStimulation.mat"))
 
 signals_dataset = []
-for lv in [50, 49]: #, 49, 48, 47, 46]:
+
+levels = range(20, 51, 1) # based on visual inspection
+for lv in levels:
     signals_dataset.extend(stimulation_data.get_signals(lv, 51))
 
-#signals_dataset = [(interpolate_signals(sig, 5, 100e3), sig) for sig in signals_dataset]
+signals_dataset = [interpolate_signals(sig, 5, 100e3) for sig in signals_dataset]
 
-fs = 100e3 #* 5 # Hz interpolated
+fs = 100e3 * 5 # Hz interpolated
 du = 3.5e-3
 distance_first_electrode = 80e-3
 electrode_positions = (np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]) * du) + distance_first_electrode
@@ -24,7 +27,7 @@ electrode_positions = (np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]) * du) + distance
 sfap_samples = int(0.005 * fs)
 
 # Search definitions
-resolution = 0.1
+resolution = 0.5
 min_cv = 10
 max_cv = 80
 search_range = np.arange(min_cv, max_cv, resolution)
@@ -42,8 +45,11 @@ for pos in electrode_positions:
 diss_NCAP_Pairs = []
 #diss_VSR = []
 
+i = 0
 As = []
 for signals in signals_dataset:
+    print(i)
+    i = i + 1
     #diss_mean_two_CAP.append(be.mean_two_cap(signals, qs))
     #diss_NCAP.append(be.NCap(signals, qs))
     #diss_NCAP_Pairs.append(be.NCapPairs(signals, qs))
@@ -52,6 +58,7 @@ for signals in signals_dataset:
     w = be.NCapPairs(signals, qs)
     diss_NCAP_Pairs.append(w)
     
+    """
     A = sfap_rec.find_sfap_A_set(signals, qs, w, sfap_samples)
 
     plt.figure()
@@ -62,6 +69,7 @@ for signals in signals_dataset:
     plt.plot((A@(qs[i+1]-qs[i])@w))
     plt.plot(signals[i])
     plt.show()
+    """
 
 """
 to_save = {
@@ -72,15 +80,35 @@ to_save = {
 }
 """
 
-mean_diss = np.mean(diss_NCAP_Pairs, axis=0)
-std = np.std(diss_NCAP_Pairs, axis=0)
+ws = diss_NCAP_Pairs
+w_mean = np.mean(ws, axis=0)
+w_std = np.std(ws, axis=0)
+
+diss = ws / (search_range**2)
+diss_mean = np.mean(diss, axis=0)
+diss_std = np.std(diss, axis=0)
+
+to_save = {
+    "ws": ws,
+    "w_mean": w_mean,
+    "w_std": w_std,
+
+    "diss": diss,
+    "diss_mean": diss_mean,
+    "diss_std": diss_std,
+}
+
+savemat("disstributions-20-51-NCapPairs.mat", to_save)
 
 plt.figure()
-plt.bar(search_range, mean_diss, yerr=std)
+plt.bar(search_range, w_mean, yerr=w_std)
 plt.show(block=False)
 
+plt.figure()
+plt.bar(search_range, diss_mean, yerr=diss_std)
+plt.show(block=False)
 
-
+"""
 A = np.mean(As, axis=0)
 
 plt.figure()
@@ -95,6 +123,6 @@ plt.show(block=False)
 plt.figure()
 plt.plot(signals_dataset[0][1][i])
 plt.show(block=False)
-
+"""
 plt.show()
 #savemat("disstributions-47-51.mat", to_save)

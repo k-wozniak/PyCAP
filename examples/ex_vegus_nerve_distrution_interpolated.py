@@ -13,7 +13,7 @@ from scipy.linalg.special_matrices import block_diag
 #caps = loadmat("meanCAP2scaled.mat")['out']
 #caps = loadmat("CAP.mat")['d']
 # _interpolated10
-caps = loadmat("meanCAP.mat")['d']
+caps = loadmat("../data/meanCAP.mat")['d']
 caps = np.array(caps).T
 #caps = np.flip(caps, 0)
 

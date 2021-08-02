@@ -36,7 +36,7 @@ class AccurateExcitationSource(ExcitationSource):
         #self.SFAP = self.A * np.power(time_series, self.n) * np.exp(-self.B * time_series)
         self.SFAP = np.array([self.get_sfap_function(x) for x in time_series])
 
-    def get_sfap(self, velocity: float, time_shift: int = 0) -> np.ndarray:
+    def get_sfap(self, velocity: float, time_shift: int = 1) -> np.ndarray:
         """ Returns the same SFAP for each velocity """
         temp = np.pad(self.SFAP, (time_shift, 0), 'constant', constant_values=(self.base_voltage, self.base_voltage))
         temp = temp[:-time_shift]

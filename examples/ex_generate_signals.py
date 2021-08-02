@@ -43,11 +43,11 @@ cv_min, cv_max, cv_step = (10, 80, 1)
 cv_dis_range = np.arange(cv_min, cv_max + cv_step, cv_step)
 cv_dis_vals = 100000*((2*norm.pdf(cv_dis_range,25,8)) + norm.pdf(cv_dis_range,50,6))
 cv_dis_vals = np.round(cv_dis_vals)
-"""
+
 plt.figure()
-plt.bar(cv_dis, cv_dis_vals)
+plt.bar(cv_dis_range, cv_dis_vals)
 plt.show(block=False)
-"""
+
 cv_dis = np.c_[cv_dis_range, cv_dis_vals]
 
 # Set model parameters
@@ -60,8 +60,8 @@ params.fs = 100e3 # Hz
 model = Model(params)
 
 # Generate Probes
-#excitation_source = SimpleExcitationSource(params.time_series)
-excitation_source = AccurateExcitationSource(params.time_series) # For A(v) = v^2
+excitation_source = SimpleExcitationSource(params.time_series)
+#excitation_source = AccurateExcitationSource(params.time_series) # For A(v) = v^2
 model.add_excitation_source(excitation_source)
 
 # Add noise
@@ -102,7 +102,7 @@ singular_signals = [s.output_signal for s in probes]
 qs = generate_qs_from_probes(probes, np.arange(cv_min, cv_max + cv_step, cv_step), params.fs)  
 
 #w = cv_dis_vals
-w = cv_dis_vals * (cv_dis_range**2)
+w = cv_dis_vals #* (cv_dis_range**2)
 
 As = []
 for i in range(len(singular_signals)):
@@ -116,10 +116,15 @@ for i in range(len(bipolar_signals)):
 
 A2 = np.mean(As, axis=0)
 
+sfap_shape = excitation_source.get_sfap(1)
+
 plt.figure()
 plt.plot(A2[:, 0])
 plt.show(block=False)
 
+plt.figure()
+plt.plot(sfap_shape)
+plt.show(block=False)
 
 # Recreate A matrix
 plt.figure()

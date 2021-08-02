@@ -1,6 +1,9 @@
 import unittest
 import numpy as np
 
+from scipy.io import loadmat
+import matplotlib.pyplot as plt
+
 from PyCAP.recordingProbes.simple_recording_probe import SimpleRecordingProbe
 from PyCAP.solvers.utils.qs_generation import generate_qs_from_probes
 from PyCAP.solvers.bipolar_electrodes import two_cap, mean_two_cap, NCap
@@ -88,3 +91,31 @@ class TestBipolarElectrodes(unittest.TestCase):
 
         expected_out = np.array([10, 20, 20, 5, 5, 0, 10, 20, 10, 0]) * 1e-2
         np.testing.assert_array_almost_equal(expected_out, w)
+
+    def test_vsr_meanCAP_distribution(self):
+        # Just plotting for now, to check what distribution looks like
+        # TODO: Can change this to a proper test maybe by loading correct distribution from MATLAB (.mat file)?
+        file = loadmat('interpStimCaps.mat', matlab_compatible=True)
+        caps = file['interpEvent']
+
+        # Set experimental parameters
+        fs = 100e3
+        du = 3.5e-3
+        vmin = 5
+        vmax = 100
+        vstep = 0.5
+        v_range = np.arange(vmin, vmax+vstep, vstep)
+        interp_factor = 5
+
+        # Create variables for VSR outputs
+        num = int(((vmax+vstep) - vmin) * (1 / vstep))
+        largest = np.zeros((num, caps.shape[2]))
+        smallest = np.zeros((num, caps.shape[2]))
+
+        for repeat in range(0, 10):
+            (_, largest[:, repeat], smallest[:, repeat]) = VSR(caps[:, :, repeat], fs * interp_factor, du, vmin, vstep, vmax)
+
+        plt.plot(v_range, np.mean(largest, axis=1))
+        plt.xlabel('Velocity (m/s)')
+        plt.ylabel('Amplitude (mV)')
+        plt.show()

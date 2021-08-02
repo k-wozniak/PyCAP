@@ -119,62 +119,59 @@ def NCapPairs(signals, qs, initial_values = None, solver_algorithm = quadratic_s
 
     return solver_algorithm(C, initial_values)
 
-def VSR(d, fs, du, vmin, vstep, vmax) -> np.ndarray:
+def VSR(d, fs, du, vmin, vstep, vmax) -> (np.ndarray, np.ndarray, np.ndarray):
     """ VSR Delay-and-add recordings - B.W.Metcalfe 2018
-            This operates in the time domain and needs to know the electrode
+            This operates in the frequency domain and needs to know the electrode
             spacing, the sample rate, and the desired analysis parameters.
-            d - Time domain data to beamform
-            fs - Sample rate of the data in Hz
-            du - The nominal electrode spacing in meters
-            vmin - Starting velocity
+            d     - Time domain data to beamform
+            fs    - Sample rate of the data in Hz
+            du    - The nominal electrode spacing in meters
+            vmin  - Starting velocity
             vstep - Velocity step
-            vmax - Stopping velocity
+            vmax  - Stopping velocity
     """
-    d = np.array(d).T
     d = np.fliplr(d)
-
     # Number of velocities
-    v = np.arange(vmin, vmax, vstep)
+    # np.arange() doesn't include end value, so adding vstep here so vmax is present
+    steps = int(((vmax+vstep) - vmin) / vstep)
+    v = np.linspace(vmin, vmax, steps)
     nv = len(v)
 
     # Get the length of the recordings and the number of channels
     nt, nu = d.shape
-        
-    # Temporal sampling parameters
-    t = np.arange(0, nt) / fs
         
     # Frequency axis
     f = (np.arange(-nt/2, nt/2) / nt) * fs
     
     # Generate element positions
     u = np.arange(0, nu) * du
-
     urep = np.tile(u, [nt, 1])
         
     dft = fft(d.T).T
-    s = 1.0/v # Hmmm
+    s = 1 / v
 
-    im = []
+    im = np.zeros((len(d), len(v)), dtype=complex)
+
     for n in range(0, nv):
         delays = urep * s[n]
 
         # Delay
-        #imn = ifft(ifftshift( fftshift(dft,1) .* exp(-j*2*pi*repmat(f.',1,nu).*delays), 1 ))
-        a6 = np.tile(f.T, (nu, 1)).T * delays
-        a4 = np.exp(-1j * 2 * np.pi * a6)
-        a3 = fftshift(dft, 0)
-        a1 = ifftshift(a3 * a4, 0)
-        imn = ifft(a1.T).T # Why does it work!!!
+        delayed_data = np.exp(-1j * 2 * np.pi * np.tile(f.T, [nu, 1]).T * delays)
+        shifted_fft = fftshift(dft, 0)
+        imn = ifft(ifftshift(shifted_fft * delayed_data, 0), axis=0)
 
-        sumation = np.sum(imn.T, axis=0)
+        im[:, n] = np.sum(imn.T, axis=0)
 
-        # Sum
-        im.append(sumation)
-    
-    im = abs(np.array(im))
-    
-    #ndarray.max(axis=None, out=None, keepdims=False, initial=<no value>, where=True)
-    
-    im = im.max(1)
+    im = abs(im)
 
-    return im
+    # Now find the largest values for each delay
+    samples = len(d)
+
+    largest = np.zeros(steps)
+    smallest = np.zeros(steps)
+
+    for i in range(steps):
+        largest[i] = max(im[0:samples, i])
+        smallest[i] = abs(min(im[0:samples, i]))
+
+    return im, largest, smallest

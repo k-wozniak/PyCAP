@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from PyCAP.solvers.utils.qs_generation import generate_q
 from PyCAP.solvers import bipolar_electrodes as be
 from scipy.io import loadmat
+from PyCAP.analysis_utils import post_conv_analysis
 
 path = u"C:/Users/admin/Documents/Projects/PyCAP/PyPNS_simulations/new/20_axons_1_pole_largeDist.mat"
 data = loadmat(path)
@@ -15,6 +16,12 @@ nerve_vs = data['velocities'][0]
 
 signals = []
 for i in range(len(signals_dataset)-1):
+    
+    plt.figure()
+    plt.plot(signals_dataset[i])
+    plt.plot(signals_dataset[i+1])
+    plt.show()
+
     signals.append(signals_dataset[i+1] - signals_dataset[i])
 
 signals = np.array(signals)
@@ -42,12 +49,14 @@ for pos in electrode_positions:
     qs.append(q)
 
 # solve
-w = be.NCapPairs(signals, qs)
+#w = be.NCapPairs(signals, qs)
 
-i = 1
-j = 4
+i = 0
+j = 2
 zero = np.zeros_like(qs[i])
-w = be.two_cap(signals_dataset[i], signals_dataset[i+1], qs[i], zero, qs[j], zero)
+w = be.two_cap(signals_dataset[i], signals_dataset[j], qs[i], zero, qs[j], zero)
+
+#ost_conv_analysis(signals_dataset, qs, w, [(1, 3)])
 
 plt.figure()
 plt.title("W")

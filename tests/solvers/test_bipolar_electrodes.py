@@ -5,7 +5,7 @@ from scipy.io import loadmat
 import matplotlib.pyplot as plt
 
 from PyCAP.recordingProbes.simple_recording_probe import SimpleRecordingProbe
-from PyCAP.solvers.utils.qs_generation import generate_qs_from_probes
+from PyCAP.solvers.utils.qs_generation import generate_qs_from_probes, generate_q
 from PyCAP.solvers.bipolar_electrodes import two_cap, mean_two_cap, NCap
 
 from PyCAP.recordingProbes.simple_recording_probe import SimpleRecordingProbe
@@ -13,11 +13,26 @@ from PyCAP.excitationSources.simple_excitation_source import SimpleExcitationSou
 from PyCAP.model.model_params import ModelParams
 from PyCAP.model.model import Model
 
+
 class TestBipolarElectrodes(unittest.TestCase):
 
+    # Simple distribution parameters
     first_probe: float = 0.08
     electrode_distance: float = 0.02
     fs: int = 100e3
+
+    # Pig vagus (pv) data (Metcalfe et al 2018)
+    file = loadmat('interpStimCaps.mat', matlab_compatible=True)
+    caps_pv: np.ndarray = file['interpEvent']
+
+    # Experimental parameters
+    fs_pv: int = 100e3
+    du_pv: float = 3.5e-3
+    vmin_pv: int = 5
+    vmax_pv: int = 100
+    vstep_pv: float = 0.5
+    v_range_pv: np.ndarray = np.arange(vmin_pv, vmax_pv + vstep_pv, vstep_pv)
+    interp_factor_pv: int = 5
 
     def generate_test_signal_for_input_distribution(self, cv, recordings):
         # Random semi valid initial params
@@ -57,6 +72,11 @@ class TestBipolarElectrodes(unittest.TestCase):
 
         np.testing.assert_array_almost_equal(np.ones(w.shape[0])*0.1, w)
 
+    def test_two_cap_pig_vagus_data(self):
+        # Start with single repeat to begin with
+        signals = self.caps_pv[:, :, 0]
+        qs = generate_q(signals, self.v_range_pv)
+
     def test_mean_two_cap_simple_distribution_correct_prediction(self):
         cv_dis = np.arange(50, 60, 1)
         cv_dis = np.c_[cv_dis, np.ones(cv_dis.shape[0])]
@@ -95,27 +115,18 @@ class TestBipolarElectrodes(unittest.TestCase):
     def test_vsr_meanCAP_distribution(self):
         # Just plotting for now, to check what distribution looks like
         # TODO: Can change this to a proper test maybe by loading correct distribution from MATLAB (.mat file)?
-        file = loadmat('interpStimCaps.mat', matlab_compatible=True)
-        caps = file['interpEvent']
-
-        # Set experimental parameters
-        fs = 100e3
-        du = 3.5e-3
-        vmin = 5
-        vmax = 100
-        vstep = 0.5
-        v_range = np.arange(vmin, vmax+vstep, vstep)
-        interp_factor = 5
 
         # Create variables for VSR outputs
-        num = int(((vmax+vstep) - vmin) * (1 / vstep))
-        largest = np.zeros((num, caps.shape[2]))
-        smallest = np.zeros((num, caps.shape[2]))
+        num = int(((self.vmax_pv+self.vstep_pv) - self.vmin_pv) * (1 / self.vstep_pv))
+        largest = np.zeros((num, self.caps_pv.shape[2]))
+        smallest = np.zeros((num, self.caps_pv.shape[2]))
 
         for repeat in range(0, 10):
-            (_, largest[:, repeat], smallest[:, repeat]) = VSR(caps[:, :, repeat], fs * interp_factor, du, vmin, vstep, vmax)
+            (_, largest[:, repeat], smallest[:, repeat]) = VSR(self.caps_pv[:, :, repeat], self.fs_pv
+                                                               * self.interp_factor_pv, self.du_pv, self.vmin_pv,
+                                                               self.vstep_pv, self.vmax_pv)
 
-        plt.plot(v_range, np.mean(largest, axis=1))
+        plt.plot(self.v_range_pv, np.mean(largest, axis=1))
         plt.xlabel('Velocity (m/s)')
         plt.ylabel('Amplitude (mV)')
         plt.show()

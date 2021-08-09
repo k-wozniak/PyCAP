@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.linalg
 from numpy.fft import fft, ifft, fftshift, ifftshift
 from scipy.linalg import matmul_toeplitz
 from typing import Tuple
@@ -22,11 +23,17 @@ def two_cap(s1, s2, q1, q2, q3, q4) -> np.ndarray:
     rc1 = get_rc(s1, qs_length)
     rc2 = get_rc(s2, qs_length)
 
-    Q1 = (q4 - q3)
-    Q2 = (q2 - q1)
+    #  Mafalda's changes
+    C1Conv = scipy.linalg.toeplitz(rc1[0], rc1[1]).T
+    C2Conv = scipy.linalg.toeplitz(rc2[0], rc2[1]).T
 
-    C = (matmul_toeplitz(rc1, Q1, check_finite=False) - 
-         matmul_toeplitz(rc2, Q2, check_finite=False))
+    C = [C1Conv*q2 - C2Conv*q1]
+
+    # Q1 = (q4 - q3)
+    # Q2 = (q2 - q1)
+    #
+    # C = (matmul_toeplitz(rc1, Q1, check_finite=False) -
+    #      matmul_toeplitz(rc2, Q2, check_finite=False))
 
     return cumminsolver_helper(C)
 

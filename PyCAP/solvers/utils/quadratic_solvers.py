@@ -1,8 +1,8 @@
 import numpy as np
-import numpy.matlib as nmat
 from scipy import sparse
 import osqp
 import math
+
 
 def quadratic_solver(C: np.ndarray, initial_values = None):
     """ Uses osqp solver to find the optimal solution for the problem given in 
@@ -46,24 +46,27 @@ def quadratic_solver(C: np.ndarray, initial_values = None):
     results = model.solve()
     return results.x
 
-def cumminsolver_helper(C: np.ndarray, initial_values = None):
-    return cumminsolver(C, initial_values = initial_values)
 
-def cumminsolver(C: np.ndarray, threshold: float = 0.01, stagnation: int = 10, initial_values: np.matlib.matrix = None):
+def cumminssolver_helper(C: np.ndarray, initial_values = None):
+    return cumminssolver(C, initial_values = initial_values)
+
+
+def cumminssolver(C: np.ndarray, threshold: float = 0.01, stagnation: int = 10, initial_values: np.ndarray = None):
     """ TODO Implement solver presented in the paper """
     
     if stagnation < 1:
         raise ValueError
 
     # Convert C to matrix to automatically use matrix multiplication
-    C = np.asmatrix(C)
-    C = 2*(C.T * C)
+    # Mafalda changes: kept this as ndarray since np.matrix is being deprecated
+    # so, changed a lot of lines to np.dot() to perform multiplication correctly
+    C = 2*(np.dot(C.T, C))
 
     w_length = C.shape[1]
     # Possible to start with initial values, like an gaussian distribution
     if initial_values is None:
         # Initialise to all having identical probabilities
-        w = nmat.ones((w_length, 1)) / w_length # Possibly wrong dimension
+        w = np.ones((w_length, 1)) / w_length # Possibly wrong dimension
     else:
         # Check if initial_values has correct dimensions
         if initial_values.shape[0] == w_length and initial_values.shape[1] == 1:
@@ -76,11 +79,11 @@ def cumminsolver(C: np.ndarray, threshold: float = 0.01, stagnation: int = 10, i
     stagnation_count = 0
     while stagnation_count <= stagnation:
         # Calculate current estimate of lambda
-        k = nmat.ones((w_length, 1))
-        l = (w.T * C * w) / ((w.T * k)**2)
+        k = np.ones((w_length, 1))
+        l = np.dot(np.dot(w.T, C), w) / np.dot(w.T, k)**2
 
         # Find true gradient
-        gradient = (C * w) - np.multiply(l, k)
+        gradient = np.dot(C, w) - np.multiply(l, k)
 
         if np.all(gradient < threshold):
             return np.squeeze(np.asarray(w))
@@ -90,13 +93,13 @@ def cumminsolver(C: np.ndarray, threshold: float = 0.01, stagnation: int = 10, i
             if gradient[i] > 0:
                 gradient[i] = (1 - math.exp(-w_length*w[i])) * gradient[i]
 
-        alpha = (gradient.T * gradient) / (gradient.T * C * gradient)
+        alpha = np.dot(gradient.T, gradient) / np.dot(np.dot(gradient.T, C), gradient)
 
         # Calculate the new w vector and f(w)
         w_new = w - np.multiply(alpha, gradient)
 
         # Evaluate objective function to see if convergence has been reached
-        objective_function = lambda w, C, k : (0.5 * (w.T*C*w) + (l*(1-w.T*k)))
+        objective_function = lambda w, C, k : (0.5 * np.dot(np.dot(w.T, C), w) + np.dot(l, (1-np.dot(w.T, k))))
         old_solution = objective_function(w, C, k)
         new_solution = objective_function(w_new, C, k)
 

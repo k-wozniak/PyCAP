@@ -4,17 +4,19 @@ from numpy.fft import fft, ifft, fftshift, ifftshift
 from scipy.linalg import matmul_toeplitz
 from typing import Tuple
 
-from PyCAP.solvers.utils.quadratic_solvers import quadratic_solver, cumminsolver_helper
+from PyCAP.solvers.utils.quadratic_solvers import quadratic_solver, cumminssolver_helper
 from PyCAP.solvers.utils.signal_operations import moving_average
+
 
 def get_rc(signal, qs_length) -> Tuple[np.ndarray, np.ndarray]:
     r = np.pad(signal, (0, qs_length-1), 'constant')
     c = np.zeros(qs_length)
     c[0] = signal[0]
 
-    return (r, c)
+    return c, r
 
-def two_cap(s1, s2, q1, q2, q3, q4) -> np.ndarray:
+
+def two_cap(s1, s2, q1, q2) -> np.ndarray:
     """ A two cap implementation as stated in the paper. Uses only two electrodes
         which do not need to be next to each other. Consequently, 4 Qs"""
         
@@ -27,7 +29,7 @@ def two_cap(s1, s2, q1, q2, q3, q4) -> np.ndarray:
     C1Conv = scipy.linalg.toeplitz(rc1[0], rc1[1]).T
     C2Conv = scipy.linalg.toeplitz(rc2[0], rc2[1]).T
 
-    C = [C1Conv*q2 - C2Conv*q1]
+    C = np.dot(C1Conv, q2) - np.dot(C2Conv, q1)
 
     # Q1 = (q4 - q3)
     # Q2 = (q2 - q1)
@@ -35,7 +37,8 @@ def two_cap(s1, s2, q1, q2, q3, q4) -> np.ndarray:
     # C = (matmul_toeplitz(rc1, Q1, check_finite=False) -
     #      matmul_toeplitz(rc2, Q2, check_finite=False))
 
-    return cumminsolver_helper(C)
+    return cumminssolver_helper(C)
+
 
 def mean_two_cap(signals, qs):
     """ Extension of the two cap method where each possible solution to every 
@@ -64,6 +67,7 @@ def mean_two_cap(signals, qs):
     
     return w_mean
 
+
 def NCap(signals, qs, initial_values = None, solver_algorithm = quadratic_solver):
     """ Further extension of the two cup method where the C matrix is generated
         based on every avaliable signal. It is also less computation intensive
@@ -90,6 +94,7 @@ def NCap(signals, qs, initial_values = None, solver_algorithm = quadratic_solver
             C = (C + C1Q4 - C1Q3 - C2Q2 + C2Q1)
 
     return solver_algorithm(C, initial_values)
+
 
 def NCapPairs(signals, qs, initial_values = None, solver_algorithm = quadratic_solver):
     """ Further extension of the two cup method where the C matrix is generated
@@ -123,8 +128,8 @@ def NCapPairs(signals, qs, initial_values = None, solver_algorithm = quadratic_s
         # Qn    = Q[n+1] - Q[n]
         C = (C + C1Q4 - C1Q3 - C2Q2 + C2Q1)
 
-
     return solver_algorithm(C, initial_values)
+
 
 def VSR(d, fs, du, vmin, vstep, vmax) -> (np.ndarray, np.ndarray, np.ndarray):
     """ VSR Delay-and-add recordings - B.W.Metcalfe 2018

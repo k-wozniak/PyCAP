@@ -9,7 +9,8 @@ from PyCAP.solvers.bipolar_electrodes import two_cap, mean_two_cap, NCap
 
 # Pig vagus (pv) data (Metcalfe et al 2018)
 file = loadmat('interpStimCaps.mat', matlab_compatible=True)
-caps_pv = file['interpEvent']
+caps_pv_orig = file['interpEvent']
+caps_pv = caps_pv_orig[:, :, ::-1] # fliplr() equivalent
 
 # Experimental parameters
 fs_pv = 100e3
@@ -30,30 +31,30 @@ start_point = 100
 c1_repeats = np.zeros((caps_pv.shape[0] - start_point, repeats))
 c2_repeats = np.zeros((caps_pv.shape[0] - start_point, repeats))
 for i in range(repeats):
-    c1_repeats[:, i] = caps_pv[start_point:, ch1, i]
+    c1_repeats[:, i] = caps_pv[start_point:, ch1, i].T
     c1_repeats[:, i] = c1_repeats[:, i] - np.mean(c1_repeats[:, i])
 
-    c2_repeats[:, i] = caps_pv[start_point:, ch2, i]
+    c2_repeats[:, i] = caps_pv[start_point:, ch2, i].T
     c2_repeats[:, i] = c2_repeats[:, i] - np.mean(c2_repeats[:, i])
 
 # Distances
 distances = [80e-3, 80e-3 + (ch1 * du_pv), 80e-3 + (ch2 * du_pv)]
 
-qs = np.zeros((len_recording - start_point, len(v_range_pv), len(distances)-1))
-qs_repeats = np.zeros(qs.shape)
-qs_repeats.resize(qs_repeats.shape + (10,), refcheck=False)
-
 # Generate Q matrix
+# Current implementation not needed since all repeats use same 2 channels (delays)
+qs = np.zeros((len_recording - start_point, len(v_range_pv), len(distances)-1))
+# qs_repeats = np.zeros(qs.shape)
+# qs_repeats.resize(qs_repeats.shape + (10,), refcheck=False)
 
-for i in range(repeats):
-    for j in range(len(distances)-1):
-        positions = [distances[j], distances[j+1]]
-        qs_repeats[:, :, j, i] = generate_qs(len(c1_repeats[:, i]), positions, v_range_pv, fs_pv)
+# for i in range(repeats):
+for j in range(len(distances)-1):
+    positions = [distances[j], distances[j+1]]
+    qs[:, :, j] = generate_qs(len(c1_repeats[:, 0]), positions, v_range_pv, fs_pv)
 
 # Solve using Cummins solver
 w_repeats = []
 for i in range(repeats):
-    w = two_cap(c1_repeats[:, i], c2_repeats[:, i], qs_repeats[:, :, 0, i], qs_repeats[:, :, 1, i])
+    w = two_cap(c1_repeats[:, i], c2_repeats[:, i], qs[:, :, 0], qs[:, :, 1])
     w_repeats.append(w)
 
 # Plotting
@@ -67,7 +68,7 @@ plt.xlabel(['Samples'])
 plt.show()
 
 # 2. Distribution
-plt.plot(v_range_pv, np.max(w_repeats, axis=0))
+plt.bar(v_range_pv, np.max(w_repeats, axis=0), edgecolor='black')
 plt.ylabel(['% of fibres'])
 plt.xlabel(['Velocity (m/s)'])
 plt.show()
@@ -76,8 +77,8 @@ plt.show()
 ct1_repeats = []
 ct2_repeats = []
 for i in range(repeats):
-    ct1_repeats.append(np.convolve(c1_repeats[:, i], np.dot(qs_repeats[:, :, 1, i], w_repeats[i])))
-    ct2_repeats.append(np.convolve(c2_repeats[:, i], np.dot(qs_repeats[:, :, 0, i], w_repeats[i])))
+    ct1_repeats.append(np.convolve(c1_repeats[:, i], np.dot(qs[:, :, 1], w_repeats[i])))
+    ct2_repeats.append(np.convolve(c2_repeats[:, i], np.dot(qs[:, :, 0], w_repeats[i])))
 
 
 for i in range(repeats):

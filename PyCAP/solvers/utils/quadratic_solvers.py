@@ -47,8 +47,10 @@ def quadratic_solver(C: np.ndarray, initial_values = None):
     return results.x
 
 
-def cumminssolver_helper(C: np.ndarray, initial_values = None):
-    return cumminssolver(C, initial_values = initial_values)
+def cumminssolver_helper(C: np.ndarray, initial_values = None, initialise=False):
+    if initialise:
+        pass
+    return cumminssolver(C, initial_values=initial_values)
 
 
 def cumminssolver(C: np.ndarray, threshold: float = 0.01, stagnation: int = 10, initial_values: np.ndarray = None):
@@ -102,6 +104,8 @@ def cumminssolver(C: np.ndarray, threshold: float = 0.01, stagnation: int = 10, 
         objective_function = lambda w, C, k : (0.5 * np.dot(np.dot(w.T, C), w) + np.dot(l, (1-np.dot(w.T, k))))
         old_solution = objective_function(w, C, k)
         new_solution = objective_function(w_new, C, k)
+        print("Current minimum: ", new_solution)
+        print("-----")
 
         # Check if solution is constant for at least 10 consecutive iterations
         percentageChange = abs((new_solution - old_solution)/old_solution)*100

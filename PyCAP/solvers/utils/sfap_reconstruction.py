@@ -46,8 +46,8 @@ def recreate_A_matrix(A: np.ndarray):
 
     return np.asarray(new_A)
 
-def find_sfap_A(signal: np.ndarray, q: np.ndarray, w: np.ndarray, max_sfap_width_samples: int = 100):
-    """ Finds the minimum to the problem of xA = B, where 
+def find_sfap_A(signal: np.ndarray, q: np.ndarray, w: np.ndarray, max_sfap_width_samples: int = 500):
+    """ Finds the minimum to the problem of Ax = B, where 
     B = signal
     A = q*w
     x = A matrix from the signal equation
@@ -61,6 +61,7 @@ def find_sfap_A(signal: np.ndarray, q: np.ndarray, w: np.ndarray, max_sfap_width
 
     # Check the signals shape should be Kx1
     signal = signal.T if signal.shape[0] == 1 else signal
+    K = signal.shape[0]
 
     # Check w shape should be Nx1
     # Won't work if there is just one N but that defeats the point
@@ -80,34 +81,24 @@ def find_sfap_A(signal: np.ndarray, q: np.ndarray, w: np.ndarray, max_sfap_width
 
     qw = q@w
 
-    c = np.concatenate([np.ones((max_sfap_width_samples,1)), np.zeros((P-max_sfap_width_samples,1))]) 
-    t = toeplitz(c, np.zeros((P,1)))
-
-    x = t * qw.T # The order is very important
-
-    for r in range(1, x.shape[0]):
-        x[r, :r+1] = np.flip(x[r, :r+1])
-
-    A = np.linalg.lstsq(x, signal.T, rcond=None)[0]
-    A = toeplitz(A, np.zeros((len(A), 1)))
-    #A = np.linalg.solve(x, signal)
-
+    if (K != P) and (K-N > 0):
+        qw = np.concatenate([qw, np.zeros((K-N,1))])
     
-    # Generate teoplitz matrix with ones and zeros only
-    # Needed to find linear equations
+    #qw[max_sfap_width_samples:] = 0
+    
+    x = toeplitz(qw, np.zeros((max_sfap_width_samples,1)))
 
-    # Dot multiply the teoplitz matrix with the A matrix
-
-    # Reverse order of each row of the matrix by taking all 
-    # Non zero values and placing them in in a flipped version
-
-    # Use linear solver to find the values
-
-    # Recreate A matrix
+    Aa = np.linalg.lstsq(x, signal, rcond=None)
+    A = Aa[0]
+    A = np.expand_dims(A, axis=1)
+    if (A.shape[0] != P) and (K-N > 0):
+        A = np.concatenate([A, np.zeros((K-A.shape[0],1))])
+    
+    A = toeplitz(A, np.zeros((P, 1)))
 
     return A
 
-def find_sfap_A_set(signals: np.ndarray, qs: np.ndarray, w: np.ndarray, max_sfap_width_samples: int = 100):
+def find_sfap_A_set(signals: np.ndarray, qs: np.ndarray, w: np.ndarray, max_sfap_width_samples: int = 300):
     S = np.sum(signals, axis=0)
 
     P = qs[0].shape[0]

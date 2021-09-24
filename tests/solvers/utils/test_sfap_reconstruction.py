@@ -8,7 +8,7 @@ from PyCAP.model.model import Model
 
 import unittest
 import numpy as np
-import xlsxwriter
+#import xlsxwriter
 
 import matplotlib.pyplot as plt
 from scipy.linalg import toeplitz
@@ -219,18 +219,27 @@ class TestSFAPReconstruction(unittest.TestCase):
         axs[4].plot(A2)
 
         plt.show()
-
+        """
         with xlsxwriter.Workbook('amatrix.xlsx') as workbook:
             worksheet = workbook.add_worksheet()
 
             for row_num, data in enumerate([signals[0], signal_0]):
                 worksheet.write_row(row_num, 0, data)
-    
+        """
     def test_the_principle(self):
-        C = np.array([[1], [2], [3]])
+        C = np.array([[1], [2], [3], [4], [5], [6], [7]])
         w = np.array([[0.1], [0.5], [0.4]])
         q = np.array([[1,1,1], [2,2,2], [3,3,3]])
 
-        sfaps = reconstruct.find_sfap_A(C, q, w)
+        sfaps = reconstruct.find_sfap_A(C, q, w, 3)
 
-        np.allclose(np.dot(q@w, sfaps), C)
+        np.allclose(sfaps@q@w, C)
+
+    def test_larger_matrix(self):
+        C = np.array([[1], [2], [3], [4], [5], [6], [7], [8], [9]])
+        w = np.array([[0.1], [0.5], [0.4]])
+        q = np.ones((9,3))
+
+        sfaps = reconstruct.find_sfap_A(C, q, w, 3)
+
+        np.allclose(sfaps@q@w, C)

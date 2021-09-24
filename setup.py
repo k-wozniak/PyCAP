@@ -22,4 +22,11 @@ setuptools.setup(
     ],
     packages = setuptools.find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     python_requires=">=3.8",
+    install_requires=[
+        'numpy',
+        'matplotlib',
+        'scipy',
+        'numba',
+        'osqp',
+    ],
 )

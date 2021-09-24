@@ -16,8 +16,8 @@ signals = np.array(signals).T
 
 fs = 100e3 # Hz
 
-du = 3.5e-4
-distance_first_electrode = 80e-4
+du = 3.5e-3
+distance_first_electrode = 80e-3
 
 resolution = 1
 search_range = np.arange(15, 80, resolution)

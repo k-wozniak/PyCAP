@@ -1,8 +1,7 @@
 from PyCAP.recordingProbes.simple_recording_probe import SimpleRecordingProbe
-from PyCAP.excitationSources.accurate_excitation_source import AccurateExcitationSource
 from PyCAP.interferenceSources.gaussian_white_noise import GaussianWhiteNoise
 from PyCAP.compoundElectrodes.overlapping_multipolar_electrodes import OverlappingMultipolarElectrodes
-from PyCAP.excitationSources.simple_excitation_source import SimpleExcitationSource
+import PyCAP.excitationSources as es
 from PyCAP.model.model_params import ModelParams
 from PyCAP.model.model import Model
 
@@ -26,7 +25,7 @@ file_name = "simulation_step_A(v)_dddd.mat"
 # cv_dis = np.c_[cv_dis, cv_dis.copy()] # A step distribution
 # cv_dis = np.c_[cv_dis, np.array([1, 1, 1, 1, 4, 4, 5, 4, 10, 10, 1, 2, 2, 1, 5, 6, 4, 4, 2, 2, 3])] # A random distribution
 
-
+"""
 cv_dis_int = np.arange(10 + 5, 74 + 1 + 5, 1)
 cv_dis = np.arange(10 + 5, 74 + 0.1 + 5, 0.01)
 
@@ -35,33 +34,38 @@ cv_dis_vals[-5:] = 0
 cv_dis_vals[:5] = 0
 
 cv_dis_vals = np.interp(cv_dis, cv_dis_int, cv_dis_vals)
+"""
 
-#plt.bar(cv_dis, cv_dis_vals)
-#plt.show()
-
+""" Natural distribution
 cv_min, cv_max, cv_step = (10, 80, 1)
 cv_dis_range = np.arange(cv_min, cv_max + cv_step, cv_step)
 cv_dis_vals = 100000*((2*norm.pdf(cv_dis_range,25,8)) + norm.pdf(cv_dis_range,50,6))
 cv_dis_vals = np.round(cv_dis_vals)
+"""
+cv_dis_range = [44.20398475] 
+#cv_dis_range = [44.20398475, 27.29976625 ] #, 73.0985387,  36.24933325, 45.11471685, 70.62947005,
+# 52.51367705, 33.0159941,  47.0580466,  37.8584892,  65.87959285, 54.4328905,
+# 63.15464075, 58.3800029,  25.5064538,  54.25950715, 35.8942265,  47.640634,
+# 61.65819515, 53.4370673 ]
+cv_dis_vals = np.ones_like(cv_dis_range)
 
-plt.figure()
-plt.bar(cv_dis_range, cv_dis_vals)
-plt.show(block=False)
-
-cv_dis = np.c_[cv_dis_range, cv_dis_vals]
+""" # Single Electron 
+cv_dis_range = np.array(30)
+cv_dis_vals = np.array(1)
+"""
 
 # Set model parameters
-#cv_dis = np.c_[np.array(80), np.array(1)]
-
-params = ModelParams(cv_dis, 0.015)
-params.fs = 100e3 # Hz
+cv_dis = np.c_[cv_dis_range, cv_dis_vals]
+params = ModelParams(cv_dis, 0.015, 400e3)
 
 # Create model and add probes
 model = Model(params)
 
 # Generate Probes
-excitation_source = SimpleExcitationSource(params.time_series)
-#excitation_source = AccurateExcitationSource(params.time_series) # For A(v) = v^2
+#excitation_source = es.SimpleExcitationSource(params.time_series)
+#excitation_source = es.AccurateExcitationSource(params.time_series) # For A(v) = v^2
+excitation_source = es.PyPnsLike(params.time_series)
+
 model.add_excitation_source(excitation_source)
 
 # Add noise
@@ -93,17 +97,17 @@ for i in range(number_of_probes):
 model.simulate()
 
 # Generate Bipolar signals
-bipolar = OverlappingMultipolarElectrodes([-1, 1])
-bipolar.add_recording_probes(probes)
-bipolar_signals = bipolar.get_all_recordings()
+#bipolar = OverlappingMultipolarElectrodes([-1, 1])
+#bipolar.add_recording_probes(probes)
+#bipolar_signals = bipolar.get_all_recordings()
 
 singular_signals = [s.output_signal for s in probes]
 
-qs = generate_qs_from_probes(probes, np.arange(cv_min, cv_max + cv_step, cv_step), params.fs)  
+#qs = generate_qs_from_probes(probes, cv_dis_range, params.fs)  
 
 #w = cv_dis_vals
 w = cv_dis_vals #* (cv_dis_range**2)
-
+"""
 As = []
 for i in range(len(singular_signals)):
     As.append(sfap_rec.find_sfap_A(singular_signals[i], qs[i], w))
@@ -133,13 +137,13 @@ i = 3
 plt.plot((A2@(qs[i+1]-qs[i])@w))
 plt.plot(bipolar_signals[i])
 plt.show(block=False)
+"""
 
-'''
 plt.figure()
-plt.plot(-singular_signals[0])
-plt.plot(singular_signals[1])
+plt.plot(params.time_series, singular_signals[0])
 plt.show(block=False)
 
+'''
 
 fig, ax = plt.subplots(9)
 for i in range(9):

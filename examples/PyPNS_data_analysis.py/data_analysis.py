@@ -13,16 +13,12 @@ time = data["time"]
 signals_dataset = data["CAPs"]
 
 nerve_vs = data['velocities'][0]
+print(nerve_vs)
 
 signals = []
 for i in range(len(signals_dataset)-1):
-    
-    plt.figure()
-    plt.plot(signals_dataset[i])
-    plt.plot(signals_dataset[i+1])
-    plt.show()
-
     signals.append(signals_dataset[i+1] - signals_dataset[i])
+
 
 signals = np.array(signals)
 
@@ -31,12 +27,12 @@ fs = 400e3
 print(fs_compare)
 print(fs)
 
-du = 3.5e-3
+du = 3.5e-2
 distance_first_electrode = 80e-3
 electrode_positions = (np.array([0, 1, 2, 3, 4]) * du) + distance_first_electrode
 
 # Search definitions
-resolution = 1
+resolution = 0.5
 min_cv = 20
 max_cv = 80
 search_range = np.arange(min_cv, max_cv, resolution)
@@ -49,12 +45,8 @@ for pos in electrode_positions:
     qs.append(q)
 
 # solve
-#w = be.NCapPairs(signals, qs)
-
-i = 0
-j = 2
-zero = np.zeros_like(qs[i])
-w = be.two_cap(signals_dataset[i], signals_dataset[j], qs[i], zero, qs[j], zero)
+w = be.NCapPairs(signals, qs)
+ww = be.VSR(signals, fs, du, min_cv, resolution, max_cv)
 
 #ost_conv_analysis(signals_dataset, qs, w, [(1, 3)])
 
@@ -74,39 +66,10 @@ plt.title("Expected")
 plt.bar(nerve_vs, np.ones(len(nerve_vs))/int(len(nerve_vs)))
 plt.show(block=False)
 
+plt.figure()
+plt.title("VSR")
+plt.plot(search_range, ww[1][:-1])
+plt.show(block=False)
 
-"""
-from scipy.io import savemat
 
-file_name = "example"
-
-cv_velocities = [20, 21, 22, 23] # ms-1
-cv_distribution = [1, 5, 5, 1] # in units of nerves
-fs = 100e3  # sampling frequency in Hz
-probes_distances = [8000*1e-6, 12000*1e-6, 16000*1e-6, 20000*1e-6, 24000*1e-6] # in meters
-
-signals = [
-    [0, 1, 2, 3, 3, 1],
-    [0, 0, 1, 2, 3, 3],
-    [0, 0, 1, 2, 3, 3],
-]
-
-signals_sfap = [
-    [0, 1, 2, 3, 3, 1],
-    [0, 1, 2, 3, 3, 1],
-    [0, 1, 2, 3, 3, 1],
-]
-
-savemat(file_name,
-{   
-    "cv_velocities": cv_velocities,
-    "cv_diss": cv_distribution,
-    "fs": fs,
-
-    "probes_distances": probes_distances,
-    
-    "signals": signals,
-    "signals_SFAP": signals_sfap,
-})
-"""
 plt.show()

@@ -119,7 +119,7 @@ def NCapPairs(signals, qs, initial_values = None, solver_algorithm = quadratic_s
 
     return solver_algorithm(C, initial_values)
 
-def VSR(d, fs, du, vmin, vstep, vmax) -> (np.ndarray, np.ndarray, np.ndarray):
+def VSR(d, fs, du, vmin, vstep, vmax) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """ VSR Delay-and-add recordings - B.W.Metcalfe 2018
             This operates in the frequency domain and needs to know the electrode
             spacing, the sample rate, and the desired analysis parameters.

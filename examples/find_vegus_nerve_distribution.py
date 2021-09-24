@@ -13,7 +13,7 @@ stimulation_data = StimulationData(loadmat("../data/electricalStimulation.mat"))
 
 signals_dataset = []
 
-levels = range(20, 51, 1) # based on visual inspection
+levels = range(50, 51, 1) # based on visual inspection
 for lv in levels:
     signals_dataset.extend(stimulation_data.get_signals(lv, 51))
 
@@ -27,9 +27,9 @@ electrode_positions = (np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]) * du) + distance
 sfap_samples = int(0.005 * fs)
 
 # Search definitions
-resolution = 0.5
+resolution = 1
 min_cv = 10
-max_cv = 80
+max_cv = 120
 search_range = np.arange(min_cv, max_cv, resolution)
 
 # Pre-calculate qs as they do not change between runs

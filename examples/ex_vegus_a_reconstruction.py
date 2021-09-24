@@ -20,7 +20,7 @@ du = 3.5e-3
 distance_first_electrode = 80e-3
 
 resolution = 0.5
-search_range = np.arange(20, 75, resolution)
+search_range = np.arange(15, 85, resolution)
 
 qs = []
 for n in range(num_electrodes + 1):
@@ -41,21 +41,18 @@ plt.show(block=False)
 
 As = []
 for i in range(len(signals)):
-    As.append(sfap_rec.find_sfap_A(signals[i], qs[i+1] - qs[i], w, 400))
+    As.append(sfap_rec.find_sfap_A(signals[i], qs[i+1] - qs[i], diss, 800))
 
 A = np.mean(As, axis=0)
+
+i = 2
 
 plt.figure("SFAP shape")
 plt.plot(A[:, 0])
 plt.show(block=False)
 
-i = 2
-A = sfap_rec.find_sfap_A(signals[i], qs[i+1] - qs[i], w, 500)
-AQ = np.matmul(A, qs[i+1] - qs[i])
-reconstructed_signal = np.matmul(AQ, w)
-
 plt.figure("Reconstructed Signal")
-plt.plot(reconstructed_signal)
+plt.plot(A@(qs[i+1]-qs[i])@diss)
 plt.show(block=False)
 
 plt.figure("Signal")

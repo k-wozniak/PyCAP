@@ -18,10 +18,10 @@ from scipy.stats import norm
 file_name = "simulation_step_A(v)_dddd.mat"
 
 # Generate cv distribution with unity
-#cv_min, cv_max, cv_step = (30, 40, 1)
+cv_min, cv_max, cv_step = (30, 40, 1)
+cv_dis_range = np.arange(cv_min, cv_max + cv_step, cv_step)
+cv_dis_vals = np.ones(cv_dis_range.shape[0]) # A uniform distribution
 
-#cv_dis = np.arange(cv_min, cv_max + cv_step, cv_step)
-#cv_dis = np.c_[cv_dis, np.ones(cv_dis.shape[0])] # A uniform distribution
 # cv_dis = np.c_[cv_dis, cv_dis.copy()] # A step distribution
 # cv_dis = np.c_[cv_dis, np.array([1, 1, 1, 1, 4, 4, 5, 4, 10, 10, 1, 2, 2, 1, 5, 6, 4, 4, 2, 2, 3])] # A random distribution
 
@@ -42,12 +42,6 @@ cv_dis_range = np.arange(cv_min, cv_max + cv_step, cv_step)
 cv_dis_vals = 100000*((2*norm.pdf(cv_dis_range,25,8)) + norm.pdf(cv_dis_range,50,6))
 cv_dis_vals = np.round(cv_dis_vals)
 """
-cv_dis_range = [44.20398475] 
-#cv_dis_range = [44.20398475, 27.29976625 ] #, 73.0985387,  36.24933325, 45.11471685, 70.62947005,
-# 52.51367705, 33.0159941,  47.0580466,  37.8584892,  65.87959285, 54.4328905,
-# 63.15464075, 58.3800029,  25.5064538,  54.25950715, 35.8942265,  47.640634,
-# 61.65819515, 53.4370673 ]
-cv_dis_vals = np.ones_like(cv_dis_range)
 
 """ # Single Electron 
 cv_dis_range = np.array(30)
@@ -56,15 +50,15 @@ cv_dis_vals = np.array(1)
 
 # Set model parameters
 cv_dis = np.c_[cv_dis_range, cv_dis_vals]
-params = ModelParams(cv_dis, 0.015, 400e3)
+params = ModelParams(cv_dis, 0.010, 100e3)
 
 # Create model and add probes
 model = Model(params)
 
 # Generate Probes
 #excitation_source = es.SimpleExcitationSource(params.time_series)
-#excitation_source = es.AccurateExcitationSource(params.time_series) # For A(v) = v^2
-excitation_source = es.PyPnsLike(params.time_series)
+excitation_source = es.AccurateExcitationSource(params.time_series) # For A(v) = v^2
+#excitation_source = es.PyPnsLike(params.time_series)
 
 model.add_excitation_source(excitation_source)
 
@@ -97,50 +91,51 @@ for i in range(number_of_probes):
 model.simulate()
 
 # Generate Bipolar signals
-#bipolar = OverlappingMultipolarElectrodes([-1, 1])
-#bipolar.add_recording_probes(probes)
-#bipolar_signals = bipolar.get_all_recordings()
+bipolar = OverlappingMultipolarElectrodes([-1, 1])
+bipolar.add_recording_probes(probes)
+bipolar_signals = bipolar.get_all_recordings()
 
 singular_signals = [s.output_signal for s in probes]
 
-#qs = generate_qs_from_probes(probes, cv_dis_range, params.fs)  
+qs = generate_qs_from_probes(probes, cv_dis_range, params.fs)  
 
 #w = cv_dis_vals
-w = cv_dis_vals #* (cv_dis_range**2)
-"""
+w = cv_dis_vals * (cv_dis_range**2)
+
 As = []
 for i in range(len(singular_signals)):
-    As.append(sfap_rec.find_sfap_A(singular_signals[i], qs[i], w))
+    As.append(sfap_rec.find_sfap_A(singular_signals[i], qs[i], w, 75))
 
 A1 = np.mean(As, axis=0)
 
 As = []
 for i in range(len(bipolar_signals)):
-    As.append(sfap_rec.find_sfap_A(bipolar_signals[i], qs[i+1]-qs[i], w))
+    As.append(sfap_rec.find_sfap_A(bipolar_signals[i], qs[i+1]-qs[i], w, 75))
 
 A2 = np.mean(As, axis=0)
 
 sfap_shape = excitation_source.get_sfap(1)
 
-plt.figure()
-plt.plot(A2[:, 0])
+plt.figure("A reconstructed")
+plt.plot(A1[:, 0])
 plt.show(block=False)
 
-plt.figure()
+plt.figure("Sfap shape")
 plt.plot(sfap_shape)
 plt.show(block=False)
 
 # Recreate A matrix
-plt.figure()
+plt.figure("Bipolar recreated and original")
 #plt.plot(A1[:, 0])
 i = 3
 plt.plot((A2@(qs[i+1]-qs[i])@w))
 plt.plot(bipolar_signals[i])
 plt.show(block=False)
-"""
 
-plt.figure()
-plt.plot(params.time_series, singular_signals[0])
+
+plt.figure("Singular signals")
+plt.plot((A1@qs[0]@w))
+plt.plot(singular_signals[0])
 plt.show(block=False)
 
 '''

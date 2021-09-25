@@ -19,8 +19,8 @@ fs = 100e3 # Hz
 du = 3.5e-3
 distance_first_electrode = 80e-3
 
-resolution = 0.5
-search_range = np.arange(15, 85, resolution)
+resolution = 0.25
+search_range = np.arange(10, 100, resolution)
 
 qs = []
 for n in range(num_electrodes + 1):
@@ -29,30 +29,31 @@ for n in range(num_electrodes + 1):
     qs.append(q)
 
 w = be.NCapPairs(signals, qs)
-diss = w.copy() / (search_range**2)
+H = w.copy() / (search_range**2)
 
 plt.figure("Original w")
 plt.bar(search_range, w)
 plt.show(block=False)
 
 plt.figure("W scaled v^2 (distribution)")
-plt.bar(search_range, diss)
+plt.bar(search_range, H)
 plt.show(block=False)
 
-As = []
-for i in range(len(signals)):
-    As.append(sfap_rec.find_sfap_A(signals[i], qs[i+1] - qs[i], diss, 800))
+qs_bipolar = []
+for i in range(num_electrodes):
+    qs_bipolar.append(qs[i+1] - qs[i])
 
-A = np.mean(As, axis=0)
+A = sfap_rec.find_sfap_A_from_a_set(signals, qs_bipolar, w, 1500)
 
-i = 2
+i = 6
+#A = sfap_rec.find_sfap_A(signals[i], qs[i+1] - qs[i], w, 100)
 
 plt.figure("SFAP shape")
 plt.plot(A[:, 0])
 plt.show(block=False)
 
 plt.figure("Reconstructed Signal")
-plt.plot(A@(qs[i+1]-qs[i])@diss)
+plt.plot(A@(qs[i+1]-qs[i])@w)
 plt.show(block=False)
 
 plt.figure("Signal")

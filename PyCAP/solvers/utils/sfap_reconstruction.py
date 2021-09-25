@@ -11,7 +11,7 @@ from typing import List
 from scipy.linalg import toeplitz
 import matplotlib.pyplot as plt
 
-def recreate_A_matrix(A: np.ndarray):
+def recreate_A_matrix(A: np.ndarray) -> np.ndarray:
     """ The shape of the A matrix is know to unitary matrix as shown below:
     A1  0   0   0   ...     Therefore, by shifting each column up it is possible
     A2  A1  0   0   ...     to align each number. Then by teaking a mean each  
@@ -46,7 +46,7 @@ def recreate_A_matrix(A: np.ndarray):
 
     return np.asarray(new_A)
 
-def find_sfap_A(signal: np.ndarray, q: np.ndarray, w: np.ndarray, max_sfap_width_samples: int = 500):
+def find_sfap_A(signal: np.ndarray, q: np.ndarray, w: np.ndarray, max_sfap_width_samples: int = 500) -> np.ndarray:
     """ Finds the minimum to the problem of Ax = B, where 
     B = signal
     A = q*w
@@ -62,6 +62,50 @@ def find_sfap_A(signal: np.ndarray, q: np.ndarray, w: np.ndarray, max_sfap_width
     # Check the signals shape should be Kx1
     signal = signal.T if signal.shape[0] == 1 else signal
     K = signal.shape[0]
+
+    x, P, N = generate_set_of_equations(K, q, w, max_sfap_width_samples)
+
+    A = np.linalg.lstsq(x, signal, rcond=None)[0]
+    A = np.expand_dims(A, axis=1)
+
+    if (A.shape[0] != P) and (K-N > 0):
+        A = np.concatenate([A, np.zeros((K-A.shape[0],1))])
+    
+    A = toeplitz(A, np.zeros((P, 1)))
+
+    return A
+
+def find_sfap_A_from_a_set(signals: np.ndarray, qs: np.ndarray, w: np.ndarray, max_sfap_width_samples: int = 300) -> np.ndarray:
+
+    x = np.array([])
+    K = signals[0].shape[0]
+    N = 0
+    P = 0
+
+    for i in range(len(signals)):
+        x_temp, P, N = generate_set_of_equations(K, qs[i], w, max_sfap_width_samples)
+
+        if x.size == 0:
+            x = x_temp
+        else:
+            x = np.concatenate((x, x_temp), axis=0)
+
+    B = np.concatenate(signals)    
+
+    A = np.linalg.lstsq(x, B, rcond=None)[0]
+    A = np.expand_dims(A, axis=1)
+
+    if (A.shape[0] != P) and (K-N > 0):
+        A = np.concatenate([A, np.zeros((K-A.shape[0],1))])
+    
+    A = toeplitz(A, np.zeros((P, 1)))
+
+    return A
+
+
+def generate_set_of_equations(K: int, q: np.ndarray, w: np.ndarray, max_sfap_width_samples: int = 500):
+    q = np.array(q)
+    w = np.array(w)
 
     # Check w shape should be Nx1
     # Won't work if there is just one N but that defeats the point
@@ -84,36 +128,4 @@ def find_sfap_A(signal: np.ndarray, q: np.ndarray, w: np.ndarray, max_sfap_width
     if (K != P) and (K-N > 0):
         qw = np.concatenate([qw, np.zeros((K-N,1))])
     
-    #qw[max_sfap_width_samples:] = 0
-    
-    x = toeplitz(qw, np.zeros((max_sfap_width_samples,1)))
-
-    Aa = np.linalg.lstsq(x, signal, rcond=None)
-    A = Aa[0]
-    A = np.expand_dims(A, axis=1)
-    if (A.shape[0] != P) and (K-N > 0):
-        A = np.concatenate([A, np.zeros((K-A.shape[0],1))])
-    
-    A = toeplitz(A, np.zeros((P, 1)))
-
-    return A
-
-def find_sfap_A_set(signals: np.ndarray, qs: np.ndarray, w: np.ndarray, max_sfap_width_samples: int = 300):
-    S = np.sum(signals, axis=0)
-
-    P = qs[0].shape[0]
-    T = np.zeros(P)
-    for x in range(len(signals)):
-        c = np.concatenate([np.ones((max_sfap_width_samples,1)), np.zeros((P-max_sfap_width_samples,1))])
-        t = toeplitz(c, np.zeros((P,1)))
-        t = t * ((qs[x+1]-qs[x])@w)
-
-        for r in range(1, t.shape[0]):
-            t[r, :r+1] = np.flip(t[r, :r+1])
-
-        T = T + t
-    
-    A = np.linalg.lstsq(T, S, rcond=None)[0]
-    A = toeplitz(A, np.zeros((len(A), 1)))
-
-    return A
+    return (toeplitz(qw, np.zeros((max_sfap_width_samples,1))), P, N)

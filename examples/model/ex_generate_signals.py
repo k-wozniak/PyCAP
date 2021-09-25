@@ -100,13 +100,17 @@ singular_signals = [s.output_signal for s in probes]
 qs = generate_qs_from_probes(probes, cv_dis_range, params.fs)  
 
 #w = cv_dis_vals
-w = cv_dis_vals * (cv_dis_range**2)
+# If signal is created using AccurateExcitationSource
+# then the output w will be scaled up
+w = cv_dis_vals * (cv_dis_range**2) 
+
+A1 = sfap_rec.find_sfap_A_from_a_set(singular_signals, qs, w, 100)
 
 As = []
 for i in range(len(singular_signals)):
     As.append(sfap_rec.find_sfap_A(singular_signals[i], qs[i], w, 75))
 
-A1 = np.mean(As, axis=0)
+#A1 = np.mean(As, axis=0)
 
 As = []
 for i in range(len(bipolar_signals)):

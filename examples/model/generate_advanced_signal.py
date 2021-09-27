@@ -64,19 +64,19 @@ bipolar_signals = bipolar.get_all_recordings()
 
 # Plot singular signals obtained
 fig, ax = plt.subplots(number_of_probes)
-ax.set_title("Singular Signals Obtained")
 for i in range(number_of_probes):
-    ax.set_xlabel("Time s");
-    ax.set_ylabel("Amplitude");
+    ax[i].set_title("Singular Signals Probe " + str(i))
+    ax[i].set_xlabel("Time s")
+    ax[i].set_ylabel("Amplitude")
     ax[i].plot(singular_signals[i])
 plt.show(block=False)
 
 # Plot bipolar signals obtained
 fig, ax = plt.subplots(number_of_probes - 1) # -1 because it's bipolar
-ax.set_title("Bipolar Signals Obtained")
 for i in range(number_of_probes - 1):
-    ax.set_xlabel("Time s");
-    ax.set_ylabel("Amplitude");
+    ax[i].set_title("Bipolar Signals Probe " + str(i))
+    ax[i].set_xlabel("Time s")
+    ax[i].set_ylabel("Amplitude")
     ax[i].plot(bipolar_signals[i])
 plt.show(block=False)
 

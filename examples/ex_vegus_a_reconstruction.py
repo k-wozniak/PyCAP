@@ -8,7 +8,7 @@ from scipy.io import loadmat, savemat
 import matplotlib.pyplot as plt
 
 #caps = loadmat("meanCAP.mat")['d']
-signals = loadmat("data/meanCAP2.mat")['d']
+signals = loadmat("data/meanCAP.mat")['d']
 
 signal_length, num_electrodes = signals.shape
 
@@ -17,7 +17,7 @@ signals = np.array(signals).T
 fs = 100e3 # Hz
 
 du = 3.5e-3
-distance_first_electrode = 80e-3
+distance_first_electrode = 85e-3
 
 resolution = 0.25
 search_range = np.arange(10, 100, resolution)
@@ -43,7 +43,7 @@ qs_bipolar = []
 for i in range(num_electrodes):
     qs_bipolar.append(qs[i+1] - qs[i])
 
-A = sfap_rec.find_sfap_A_from_a_set(signals, qs_bipolar, w, 1500)
+A = sfap_rec.find_sfap_A_from_a_set(signals, qs_bipolar, w, 1200)
 
 i = 6
 #A = sfap_rec.find_sfap_A(signals[i], qs[i+1] - qs[i], w, 100)
